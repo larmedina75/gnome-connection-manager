@@ -1,4 +1,7 @@
 # gnome-connection-manager
+
+![GCM screenshot](screenshot.png)
+
 Tabbed SSH connection manager for GTK+ environments.
 
 - Gnome Connection Manager is licensed under the GNU General Public License version 3
@@ -34,6 +37,16 @@ your choice and typing in shell:
 
 ```shell
 python gnome_connection_manager.py
+```
+
+The application will read your `LANG` environment variable and load appropriate translation file (if your language is 
+supported), otherwise it will fallback to english.
+
+If you want to start gnome-connection-manager with specific language start it with LANGUAGE parameter followed by language code, 
+like so:
+
+```shell
+LANGUAGE=de_DE python gnome_connection_manager.py
 ```
 
 If you want to run the application from menu/launcher you can create .desktop file in your 
