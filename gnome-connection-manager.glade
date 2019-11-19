@@ -764,6 +764,9 @@ blanco: por defecto
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkTable" id="table3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -1940,6 +1943,12 @@ if not, write to the Free Software Foundation, Inc.,
                 <child>
                   <placeholder/>
                 </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
             </child>
             <child type="tab">
@@ -2491,8 +2500,9 @@ if not, write to the Free Software Foundation, Inc.,
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Servers</property>
+                <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem1_menu2">
+                  <object class="GtkMenu" id="menuServers">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
@@ -2503,8 +2513,30 @@ if not, write to the Free Software Foundation, Inc.,
                         <property name="use_stock">False</property>
                       </object>
                     </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="menuitem5">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">_Help</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menuitem1_menu3">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="importar_servidores3">
+                      <object class="GtkImageMenuItem" id="guardar_como4">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
+                        <property name="use_stock">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="importar_servidores4">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Importar lista de servidores desde un archivo</property>
@@ -2549,17 +2581,15 @@ if not, write to the Free Software Foundation, Inc.,
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="menuitem5">
+              <object class="GtkMenuItem" id="menuitem6">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">_Help</property>
-                <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem1_menu3">
+                  <object class="GtkMenu" id="menuitem1_menu4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="guardar_como4">
+                      <object class="GtkImageMenuItem" id="guardar_como5">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
@@ -2567,7 +2597,7 @@ if not, write to the Free Software Foundation, Inc.,
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="importar_servidores4">
+                      <object class="GtkImageMenuItem" id="importar_servidores5">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Importar lista de servidores desde un archivo</property>
