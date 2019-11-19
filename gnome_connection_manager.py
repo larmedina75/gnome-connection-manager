@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 # Python module gnome_connection_manager.py
@@ -164,21 +164,33 @@ import base64
 import time
 import tempfile
 import shlex
+import traceback
 
-try:
-    import gtk
-    import gobject
-except:
-    print >> sys.stderr, "pygtk required"
-    sys.exit(1)
+#try:
+#    import gtk
+#    import GObject
+#except:
+#    #print >> sys.stderr, "pygtk required"
+#    print("pygtk required", file=sys.stderr)
+#    sys.exit(1)
+
+#import gtk
+#import GObject
   
-try:
-    import vte
-except:
-    error = gtk.MessageDialog (None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-      'You must install libvte for python')
-    error.run()
-    sys.exit (1)
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Vte', '2.91')
+from gi.repository import Gtk
+from gi.repository import Vte, GLib, Gio, Gdk, GdkPixbuf
+from gi.repository import GObject
+
+#try:
+#    import Vte
+#except:
+#    error = Gtk.MessageDialog (None, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK,
+#      'You must install libVte for python')
+#    error.run()
+#    sys.exit (1)
 
 #Ver si expect esta instalado
 try:
@@ -186,22 +198,23 @@ try:
 except:
     e = -1
 if e != 0:
-    error = gtk.MessageDialog (None, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-      'You must install expect')
+    error = Gtk.MessageDialog (parent=None, flags=0, message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.OK, text='You must install expect')
     error.run()
     sys.exit (1)
 
-gtk.gdk.threads_init()
+#Gtk.gdk.threads_init()
+Gdk.threads_init()
 
 from SimpleGladeApp import SimpleGladeApp
 from SimpleGladeApp import bindtextdomain
 
-import ConfigParser
-import pango
+import configparser
+from gi.repository import Pango as pango
+#import pango
 import pyAES
 
 app_name = "Gnome Connection Manager"
-app_version = "1.1.0"
+app_version = "1.3.0"
 app_web = "http://www.kuthulu.com/gcm"
 app_fileversion = "1"
 
@@ -284,13 +297,21 @@ class conf():
     VERSION = 0
 
 def msgbox(text, parent=None):
-    msgBox = gtk.MessageDialog(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
+    msgBox = Gtk.MessageDialog(parent=parent, 
+                               flags=Gtk.DialogFlags.MODAL, 
+                               message_type=Gtk.MessageType.ERROR, 
+                               buttons=Gtk.ButtonsType.OK, 
+                               text=text+"dddd")
     msgBox.set_icon_from_file(ICON_PATH)
     msgBox.run()    
     msgBox.destroy()
 
 def msgconfirm(text):
-    msgBox = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_QUESTION, gtk.BUTTONS_OK_CANCEL, text)
+    msgBox = Gtk.MessageDialog(parent=None, 
+                               flags=Gtk.DialogFlags.MODAL, 
+                               message_type=Gtk.MessageType.QUESTION, 
+                               buttons=Gtk.ButtonsType.OK_CANCEL, 
+                               text=text)
     msgBox.set_icon_from_file(ICON_PATH)
     response = msgBox.run()    
     msgBox.destroy()
@@ -300,7 +321,7 @@ def msgconfirm(text):
 def inputbox(title, text, default='', password=False):
     msgBox = EntryDialog(title, text, default, mask=password)
     msgBox.set_icon_from_file(ICON_PATH)
-    if msgBox.run() == gtk.RESPONSE_OK:
+    if msgBox.run() == Gtk.RESPONSE_OK:
         response = msgBox.value
     else:
         response = None
@@ -312,29 +333,29 @@ def show_font_dialog(parent, title, button):
         parent.dlgFont = None
         
     if parent.dlgFont == None:
-        parent.dlgFont = gtk.FontSelectionDialog(title)
+        parent.dlgFont = Gtk.FontSelectionDialog(title)
     fontsel = parent.dlgFont.fontsel
     fontsel.set_font_name(button.selected_font.to_string())    
 
     response = parent.dlgFont.run()
 
-    if response == gtk.RESPONSE_OK:        
+    if response == Gtk.RESPONSE_OK:        
         button.selected_font = pango.FontDescription(fontsel.get_font_name())        
         button.set_label(button.selected_font.to_string())
         button.get_child().modify_font(button.selected_font)
     parent.dlgFont.hide()
     
 def show_open_dialog(parent, title, action):        
-    dlg = gtk.FileChooserDialog(title=title, parent=parent, action=action)
-    dlg.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+    dlg = Gtk.FileChooserDialog(title=title, parent=parent, action=action)
+    dlg.add_button(Gtk.STOCK_CANCEL, Gtk.RESPONSE_CANCEL)
     
-    dlg.add_button(gtk.STOCK_SAVE if action==gtk.FILE_CHOOSER_ACTION_SAVE else gtk.STOCK_OPEN, gtk.RESPONSE_OK)        
+    dlg.add_button(Gtk.STOCK_SAVE if action==Gtk.FILE_CHOOSER_ACTION_SAVE else Gtk.STOCK_OPEN, Gtk.RESPONSE_OK)        
     dlg.set_do_overwrite_confirmation(True)        
     if not hasattr(parent,'lastPath'):
         parent.lastPath = os.path.expanduser("~")
     dlg.set_current_folder( parent.lastPath )
     
-    if dlg.run() == gtk.RESPONSE_OK:
+    if dlg.run() == Gtk.RESPONSE_OK:
         filename = dlg.get_filename()
         parent.lastPath = os.path.dirname(filename)
     else:
@@ -352,7 +373,7 @@ def get_key_name(event):
         name = name + "ALT+"
     if event.state & 67108864:
         name = name + "SUPER+"
-    return name + gtk.gdk.keyval_name(event.keyval).upper()
+    return name + Gtk.gdk.keyval_name(event.keyval).upper()
      
 def get_username():
     return os.getenv('USER') or os.getenv('LOGNAME') or os.getenv('USERNAME')
@@ -379,7 +400,7 @@ def initialise_encyption_key():
     y = int(str(random.random())[2:])
     enc_passwd = "%x" % (x*y)
     try:
-        with os.fdopen(os.open(KEY_FILE, os.O_WRONLY | os.O_CREAT, 0600), 'w') as f:
+        with os.fdopen(os.open(KEY_FILE, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as f:
             f.write(enc_passwd)
     except:
         msgbox("Error initialising key_file")
@@ -448,7 +469,7 @@ class Wmain(SimpleGladeApp):
         if conf.VERSION == 0:
             initialise_encyption_key()
         
-        settings = gtk.settings_get_default()
+        settings = Gtk.Settings.get_default()
         settings.props.gtk_menu_bar_accel = None
 
         self.real_transparency = False
@@ -469,26 +490,26 @@ class Wmain(SimpleGladeApp):
         for x in self.nbConsole.get_children():
             self.nbConsole.remove(x)
         self.nbConsole.set_scrollable(True)
-        self.nbConsole.set_group_id(11)
+        self.nbConsole.set_group_name('default')
         self.nbConsole.connect('page_removed', self.on_page_removed)        
         self.nbConsole.connect("page-added", self.on_page_added)                                        
         
                 
         self.hpMain.previous_position = 150
         
-        if conf.LEFT_PANEL_WIDTH!=0:
-            self.set_panel_visible(conf.SHOW_PANEL)
-        self.set_toolbar_visible(conf.SHOW_TOOLBAR)
+        #if conf.LEFT_PANEL_WIDTH!=0:
+        #    self.set_panel_visible(conf.SHOW_PANEL)
+        #self.set_toolbar_visible(conf.SHOW_TOOLBAR)
         
         #a veces no se posiciona correctamente con 400 ms, asi que se repite el llamado 
-        gobject.timeout_add(400, lambda : self.hpMain.set_position(conf.LEFT_PANEL_WIDTH))
-        gobject.timeout_add(900, lambda : self.hpMain.set_position(conf.LEFT_PANEL_WIDTH))
+        GObject.timeout_add(400, lambda : self.hpMain.set_position(conf.LEFT_PANEL_WIDTH))
+        GObject.timeout_add(900, lambda : self.hpMain.set_position(conf.LEFT_PANEL_WIDTH))
 
         if conf.HIDE_DONATE:
             self.get_widget("btnDonate").hide_all()
         
         if conf.CHECK_UPDATES:
-            gobject.timeout_add(2000, lambda: self.check_updates())
+            GObject.timeout_add(2000, lambda: self.check_updates())
         
         #Por cada parametro de la linea de comandos buscar el host y agregar un tab
         for arg in sys.argv[1:]:
@@ -502,10 +523,12 @@ class Wmain(SimpleGladeApp):
                             self.addTab(self.nbConsole, h)
                             break                
         
-        self.get_widget('txtSearch').modify_text(gtk.STATE_NORMAL, gtk.gdk.Color('darkgray'))
+        self.get_widget('txtSearch').modify_text(Gtk.StateType.NORMAL, Gdk.Color(0.66, 0.66, 0.66)) # 'darkgray
+
         
         if conf.STARTUP_LOCAL:
             self.addTab(self.nbConsole,'local')
+
         
     #-- Wmain.new {
     def new(self):        
@@ -513,10 +536,10 @@ class Wmain(SimpleGladeApp):
         self.nbConsole = self.get_widget("nbConsole")
         self.treeServers = self.get_widget("treeServers")
         self.menuServers = self.get_widget("menuServers")
-        self.menuCustomCommands = self.get_widget("menuCustomCommands")
+        #self.menuCustomCommands = self.get_widget("menuCustomCommands")
         self.current = None
         self.count = 0        
-    #-- Wmain.new }
+    #-- Wmain.new }glade
 
     #-- Wmain custom methods {           
     #   Write your own methods here
@@ -526,7 +549,7 @@ class Wmain(SimpleGladeApp):
         checker.start()
             
     def on_terminal_click(self, widget, event, *args):      
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:
             if conf.PASTE_ON_RIGHT_CLICK:
                 widget.paste_clipboard()
             else:
@@ -537,7 +560,7 @@ class Wmain(SimpleGladeApp):
             return True
     
     def on_terminal_keypress(self, widget, event, *args):
-        if shortcuts.has_key(get_key_name(event)):
+        if shortcuts.has_key    (get_key_name(event)):
             cmd = shortcuts[get_key_name(event)]
             if type(cmd) == list:
                 #comandos predefinidos
@@ -575,12 +598,12 @@ class Wmain(SimpleGladeApp):
                         widget.fork_command(SHELL)
                     else:
                         widget.fork_command(widget.command[0], widget.command[1])
-                        while gtk.events_pending():
-                            gtk.main_iteration(False)                                
+                        while Gtk.events_pending():
+                            Gtk.main_iteration(False)                                
                             
                         #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                         if widget.command[2]!=None and widget.command[2]!='':
-                            gobject.timeout_add(2000, self.send_data, widget, widget.command[2])                    
+                            GObject.timeout_add(2000, self.send_data, widget, widget.command[2])                    
                     widget.get_parent().get_parent().get_tab_label(widget.get_parent()).mark_tab_as_active()
                     return True
                 elif cmd == _CONNECT:
@@ -614,7 +637,7 @@ class Wmain(SimpleGladeApp):
             if pos != -1:                
                 self.search['index'] = i if backwards else i + 1
                 #print 'found at line %d column %d, index=%d' % (i, pos, self.search['index'])
-                gobject.timeout_add(0, lambda: self.search['terminal'].get_adjustment().set_value(i))
+                GObject.timeout_add(0, lambda: self.search['terminal'].get_adjustment().set_value(i))
                 self.search['terminal'].queue_draw()
                 break
         if pos==-1:
@@ -670,7 +693,7 @@ class Wmain(SimpleGladeApp):
         elif item == 'H': #COPY HOST ADDRESS TO CLIPBOARD
             if self.treeServers.get_selection().get_selected()[1]!=None and not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):
                 host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)                
-                cb = gtk.Clipboard()
+                cb = Gtk.Clipboard()
                 cb.set_text(host.host)
                 cb.store()
             return True
@@ -717,12 +740,12 @@ class Wmain(SimpleGladeApp):
                 term.fork_command(SHELL)
             else:
                 term.fork_command(term.command[0], term.command[1])
-                while gtk.events_pending():
-                    gtk.main_iteration(False)                                
+                while Gtk.events_pending():
+                    Gtk.main_iteration(False)                                
                     
                 #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                 if term.command[2]!=None and term.command[2]!='':
-                    gobject.timeout_add(2000, self.send_data, term, term.command[2])
+                    GObject.timeout_add(2000, self.send_data, term, term.command[2])
             tab.mark_tab_as_active()
             return True
         elif item == 'CC' or item == 'CC2': #CLONE CONSOLE
@@ -753,190 +776,214 @@ class Wmain(SimpleGladeApp):
             return True
                 
     def createMenu(self):
-        self.popupMenu = gtk.Menu()
-        self.popupMenu.mnuCopy = menuItem = gtk.ImageMenuItem(_("Copiar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.ICON_SIZE_MENU))
+        self.popupMenu = Gtk.Menu()
+        self.popupMenu.mnuCopy = menuItem = Gtk.ImageMenuItem(_("Copiar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_COPY, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_COPY, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'C')
         menuItem.show()
         
-        self.popupMenu.mnuPaste = menuItem = gtk.ImageMenuItem(_("Pegar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_PASTE, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuPaste = menuItem = Gtk.ImageMenuItem(_("Pegar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_PASTE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_PASTE, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'V')
         menuItem.show()
         
-        self.popupMenu.mnuCopyPaste = menuItem = gtk.ImageMenuItem(_("Copiar y Pegar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_INDEX, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuCopyPaste = menuItem = Gtk.ImageMenuItem(_("Copiar y Pegar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_INDEX, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_INDEX, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'CV')
         menuItem.show()
         
-        self.popupMenu.mnuSelect = menuItem = gtk.ImageMenuItem(_("Seleccionar todo"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_SELECT_ALL, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuSelect = menuItem = Gtk.ImageMenuItem(_("Seleccionar todo"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_SELECT_ALL, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_SELECT_ALL, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'A')
         menuItem.show()
         
-        self.popupMenu.mnuCopyAll = menuItem = gtk.ImageMenuItem(_("Copiar todo"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_SELECT_ALL, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuCopyAll = menuItem = Gtk.ImageMenuItem(_("Copiar todo"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_SELECT_ALL, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_SELECT_ALL, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'CA')
         menuItem.show()
         
-        self.popupMenu.mnuSelect = menuItem = gtk.ImageMenuItem(_("Guardar buffer en archivo"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_SAVE, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuSelect = menuItem = Gtk.ImageMenuItem(_("Guardar buffer en archivo"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_SAVE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_SAVE, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'S')
         menuItem.show()
         
-        menuItem = gtk.MenuItem()
+        menuItem = Gtk.MenuItem()
         self.popupMenu.append(menuItem)
         menuItem.show()
         
-        self.popupMenu.mnuReset = menuItem = gtk.ImageMenuItem(_("Reiniciar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_NEW, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuReset = menuItem = Gtk.ImageMenuItem(_("Reiniciar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_NEW, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_NEW, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'RS2')
         menuItem.show()
         
-        self.popupMenu.mnuClear = menuItem = gtk.ImageMenuItem(_("Reiniciar y Limpiar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_CLEAR, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuClear = menuItem = Gtk.ImageMenuItem(_("Reiniciar y Limpiar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_CLEAR, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CLEAR, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'RC2')
         menuItem.show()
         
-        self.popupMenu.mnuClone = menuItem = gtk.ImageMenuItem(_("Clonar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuClone = menuItem = Gtk.ImageMenuItem(_("Clonar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_COPY, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_COPY, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'CC2')
         menuItem.show()
 
-        self.popupMenu.mnuLog = menuItem = gtk.CheckMenuItem(_("Habilitar log"))
+        self.popupMenu.mnuLog = menuItem = Gtk.CheckMenuItem(_("Habilitar log"))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'L2')
         menuItem.show()
         
-        self.popupMenu.mnuClose = menuItem = gtk.ImageMenuItem(_("Cerrar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU))
+        self.popupMenu.mnuClose = menuItem = Gtk.ImageMenuItem(_("Cerrar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_CLOSE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU))
         self.popupMenu.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'X')
         menuItem.show()
         
-        menuItem = gtk.MenuItem()
+        menuItem = Gtk.MenuItem()
         self.popupMenu.append(menuItem)
         menuItem.show()
         
         #Menu de comandos personalizados
-        self.popupMenu.mnuCommands = gtk.Menu()
+        self.popupMenu.mnuCommands = Gtk.Menu()
         
-        self.popupMenu.mnuCmds = menuItem = gtk.ImageMenuItem(_("Comandos personalizados"))
+        self.popupMenu.mnuCmds = menuItem = Gtk.ImageMenuItem(_("Comandos personalizados"))
         menuItem.set_submenu(self.popupMenu.mnuCommands)
         self.popupMenu.append(menuItem)
         menuItem.show()
         self.populateCommandsMenu()
                 
         #Menu contextual para panel de servidores
-        self.popupMenuFolder = gtk.Menu()
+        self.popupMenuFolder = Gtk.Menu()
         
-        self.popupMenuFolder.mnuConnect = menuItem = gtk.ImageMenuItem(_("Conectar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_EXECUTE, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuConnect = menuItem = Gtk.ImageMenuItem(_("Conectar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_EXECUTE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EXECUTE, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_btnConnect_clicked)
         menuItem.show()
 
-        self.popupMenuFolder.mnuCopyAddress = menuItem = gtk.ImageMenuItem(_("Copiar Direccion"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuCopyAddress = menuItem = Gtk.ImageMenuItem(_("Copiar Direccion"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_COPY, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_COPY, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'H')
         menuItem.show()
         
-        self.popupMenuFolder.mnuAdd = menuItem = gtk.ImageMenuItem(_("Agregar Host"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_ADD, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuAdd = menuItem = Gtk.ImageMenuItem(_("Agregar Host"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_ADD, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_ADD, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_btnAdd_clicked)
         menuItem.show()
         
-        self.popupMenuFolder.mnuEdit = menuItem = gtk.ImageMenuItem(_("Editar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_EDIT, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuEdit = menuItem = Gtk.ImageMenuItem(_("Editar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_EDIT, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EDIT, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_bntEdit_clicked)
         menuItem.show()
         
-        self.popupMenuFolder.mnuDel = menuItem = gtk.ImageMenuItem(_("Eliminar"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_DELETE, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuDel = menuItem = Gtk.ImageMenuItem(_("Eliminar"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_DELETE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_DELETE, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_btnDel_clicked)
         menuItem.show()
         
-        self.popupMenuFolder.mnuDup = menuItem = gtk.ImageMenuItem(_("Duplicar Host"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_DND_MULTIPLE, gtk.ICON_SIZE_MENU))
+        self.popupMenuFolder.mnuDup = menuItem = Gtk.ImageMenuItem(_("Duplicar Host"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_DND_MULTIPLE, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_DND_MULTIPLE, Gtk.IconSize.MENU))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'D')
         menuItem.show()
         
-        menuItem = gtk.MenuItem()
+        menuItem = Gtk.MenuItem()
         self.popupMenuFolder.append(menuItem)
         menuItem.show()
         
-        self.popupMenuFolder.mnuExpand = menuItem = gtk.ImageMenuItem(_("Expandir todo"))        
+        self.popupMenuFolder.mnuExpand = menuItem = Gtk.ImageMenuItem(_("Expandir todo"))        
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", lambda *args: self.treeServers.expand_all())
         menuItem.show()
         
-        self.popupMenuFolder.mnuCollapse = menuItem = gtk.ImageMenuItem(_("Contraer todo"))
+        self.popupMenuFolder.mnuCollapse = menuItem = Gtk.ImageMenuItem(_("Contraer todo"))
         self.popupMenuFolder.append(menuItem)
         menuItem.connect("activate", lambda *args: self.treeServers.collapse_all())
         menuItem.show()
         
         
         #Menu contextual para tabs
-        self.popupMenuTab = gtk.Menu()
+        self.popupMenuTab = Gtk.Menu()
         
-        self.popupMenuTab.mnuRename = menuItem = gtk.ImageMenuItem(_("Renombrar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_EDIT, gtk.ICON_SIZE_MENU))
+        self.popupMenuTab.mnuRename = menuItem = Gtk.ImageMenuItem(_("Renombrar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_EDIT, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_EDIT, Gtk.IconSize.MENU))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'R')
         menuItem.show()
         
-        self.popupMenuTab.mnuReset = menuItem = gtk.ImageMenuItem(_("Reiniciar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_NEW, gtk.ICON_SIZE_MENU))
+        self.popupMenuTab.mnuReset = menuItem = Gtk.ImageMenuItem(_("Reiniciar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_NEW, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_NEW, Gtk.IconSize.MENU))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'RS')
         menuItem.show()
         
-        self.popupMenuTab.mnuClear = menuItem = gtk.ImageMenuItem(_("Reiniciar y Limpiar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_CLEAR, gtk.ICON_SIZE_MENU))
+        self.popupMenuTab.mnuClear = menuItem = Gtk.ImageMenuItem(_("Reiniciar y Limpiar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_CLEAR, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CLEAR, Gtk.IconSize.MENU))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'RC')
         menuItem.show()
         
-        self.popupMenuTab.mnuReopen = menuItem = gtk.ImageMenuItem(_("Reconectar al host"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_CONNECT, gtk.ICON_SIZE_MENU))
+        self.popupMenuTab.mnuReopen = menuItem = Gtk.ImageMenuItem(_("Reconectar al host"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_CONNECT, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_CONNECT, Gtk.IconSize.MENU))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'RO')                
         #menuItem.show()
         
-        self.popupMenuTab.mnuClone = menuItem = gtk.ImageMenuItem(_("Clonar consola"))
-        menuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_COPY, gtk.ICON_SIZE_MENU))
+        self.popupMenuTab.mnuClone = menuItem = Gtk.ImageMenuItem(_("Clonar consola"))
+        #menuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_COPY, Gtk.ICON_SIZE_MENU))
+        menuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_COPY, Gtk.IconSize.MENU))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'CC')
         menuItem.show()
 
-        self.popupMenuTab.mnuLog = menuItem = gtk.CheckMenuItem(_("Habilitar log"))
+        self.popupMenuTab.mnuLog = menuItem = Gtk.CheckMenuItem(_("Habilitar log"))
         self.popupMenuTab.append(menuItem)
         menuItem.connect("activate", self.on_popupmenu, 'L')
         menuItem.show()
         
     def createMenuItem(self, shortcut, label):
-        menuItem = gtk.MenuItem('')
+        menuItem = Gtk.MenuItem('')
         menuItem.get_child().set_markup("<span color='blue'  size='x-small'>[%s]</span> %s" % (shortcut, label))
         menuItem.show()
         return menuItem
                 
     def populateCommandsMenu(self):
-        self.popupMenu.mnuCommands.foreach(lambda x: self.popupMenu.mnuCommands.remove(x))
-        self.menuCustomCommands.foreach(lambda x: self.menuCustomCommands.remove(x))
+        #self.popupMenu.mnuCommands.remove_all()
+
+        #for custom in self.menuCustomCommands: 
+        #   custom.remove()
+
         for x in shortcuts:
             if type(shortcuts[x]) != list:
                 menuItem = self.createMenuItem(x, shortcuts[x][0:30])
@@ -1036,13 +1083,22 @@ class Wmain(SimpleGladeApp):
 
     def addTab(self, notebook, host):
         try:
-            v = vte.Terminal()
-            v.set_word_chars(conf.WORD_SEPARATORS)
+            v = Vte.Terminal()
+            #v.set_word_chars(conf.WORD_SEPARATORS)
+            v.spawn_sync(
+                Vte.PtyFlags.DEFAULT,
+                os.environ['HOME'],
+                ["/bin/sh"],
+                [],
+                GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                None,
+                None,
+                )
             v.set_scrollback_lines(conf.BUFFER_LINES)
-            if v.get_emulation() != os.getenv("TERM"):
-                os.environ['TERM'] = v.get_emulation()
+            #if v.get_emulation() != os.getenv("TERM"):
+            #    os.environ['TERM'] = v.get_emulation()
             
-            if isinstance(host, basestring):
+            if isinstance(host, str):
                 host = Host('', host) 
             
             fcolor = host.font_color
@@ -1052,16 +1108,16 @@ class Wmain(SimpleGladeApp):
                 bcolor = conf.BACK_COLOR
                 
             if len(fcolor)>0 and len(bcolor)>0:
-                v.set_colors(gtk.gdk.Color(fcolor), gtk.gdk.Color(bcolor), [])
+                v.set_colors(Gtk.gdk.Color(fcolor), Gtk.gdk.Color(bcolor), [])
 
             if len(conf.FONT)==0:
                 conf.FONT = 'monospace'
             else:
                 v.set_font(pango.FontDescription(conf.FONT))
             
-            scrollPane = gtk.ScrolledWindow()            
+            scrollPane = Gtk.ScrolledWindow()            
             scrollPane.connect('button_press_event', lambda *args: True)
-            scrollPane.set_property('hscrollbar-policy', gtk.POLICY_NEVER)
+            scrollPane.set_property('hscrollbar-policy', Gtk.PolicyType.NEVER)
             tab = NotebookTabLabel("  %s  " % (host.name), self.nbConsole, scrollPane, self.popupMenuTab )
             
             v.connect("child-exited", lambda widget: tab.mark_tab_as_closed())
@@ -1075,7 +1131,7 @@ class Wmain(SimpleGladeApp):
                     v.set_background_transparent(True)
                     v.set_background_saturation(conf.TRANSPARENCY / 100.0)
                     if len(bcolor)>0:
-                        v.set_background_tint_color(gtk.gdk.Color(bcolor))
+                        v.set_background_tint_color(Gtk.gdk.Color(bcolor))
                 else:
                     v.set_opacity(int( (100 - conf.TRANSPARENCY) / 100.0 * 65535) )
             
@@ -1094,14 +1150,22 @@ class Wmain(SimpleGladeApp):
             self.on_tab_focus(v)
             self.set_terminal_logger(v, host.log)
 
-            gobject.timeout_add(200, lambda : self.wMain.set_focus(v))
+            GObject.timeout_add(200, lambda : self.wMain.set_focus(v))
             
             #Dar tiempo a la interfaz para que muestre el terminal
-            while gtk.events_pending():
-                gtk.main_iteration(False)
+            while Gtk.events_pending():
+                Gtk.main_iteration()
             
             if host.host == '' or host.host == None:
-                v.fork_command(SHELL)
+                v.spawn_sync(
+                    Vte.PtyFlags.DEFAULT,
+                    os.environ['HOME'],
+                    ["/bin/sh"],
+                    [],
+                    GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                    None,
+                    None,
+                    )
             else:
                 cmd = SSH_COMMAND
                 password = host.password
@@ -1151,12 +1215,12 @@ class Wmain(SimpleGladeApp):
                     args += [host.host, host.port]
                 v.command = (cmd, args, password)
                 v.fork_command(cmd, args)
-                while gtk.events_pending():
-                    gtk.main_iteration(False)                                
+                while Gtk.events_pending():
+                    Gtk.main_iteration(False)                                
                 
                 #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                 if password!=None and password!='':
-                    gobject.timeout_add(2000, self.send_data, v, password)
+                    GObject.timeout_add(2000, self.send_data, v, password)
             
             #esperar 3 seg antes de enviar comandos
             if host.commands!=None and host.commands!='':
@@ -1165,19 +1229,20 @@ class Wmain(SimpleGladeApp):
                 for line in host.commands.splitlines():
                     if line.startswith("##D=") and line[4:].isdigit():
                         if len(lines):
-                            gobject.timeout_add(basetime, self.send_data, v, "\r".join(lines))
+                            GObject.timeout_add(basetime, self.send_data, v, "\r".join(lines))
                             lines = []
                         basetime += int(line[4:])
                     else:
                         lines.append(line)
                 if len(lines):
-                    gobject.timeout_add(basetime, self.send_data, v, "\r".join(lines))
+                    GObject.timeout_add(basetime, self.send_data, v, "\r".join(lines))
             v.queue_draw()
             
             #guardar datos de consola para clonar consola
             v.host = host
         except:
-            msgbox("%s: %s" % (_("Error al conectar con servidor"), sys.exc_info()[1]))
+            tace_text = traceback.format_exc()
+            msgbox("%s: %s : %s" % (_("Error al conectar con servidor"), sys.exc_info()[1], tace_text))
             
     def send_data(self, terminal, data):
         terminal.feed_child('%s\r' % (data))        
@@ -1186,27 +1251,27 @@ class Wmain(SimpleGladeApp):
     def initLeftPane(self):
         global groups       
 
-        self.treeModel = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_PYOBJECT, gtk.gdk.Pixbuf)
+        self.treeModel = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_PYOBJECT, GdkPixbuf.Pixbuf)
         self.treeServers.set_model(self.treeModel)
 
         self.treeServers.set_level_indentation(5)
         #Force the alternating row colors, by default it's off with one column
         self.treeServers.set_property('rules-hint', True)
-        gtk.rc_parse_string( """
+        Gtk.rc_parse_string( """
                 style "custom-treestyle"{
                     GtkTreeView::allow-rules = 1
                 }
                 widget "*treeServers*" style "custom-treestyle"
             """)
-        column = gtk.TreeViewColumn()
+        column = Gtk.TreeViewColumn()
         column.set_title('Servers')
         self.treeServers.append_column( column )
 
-        renderer = gtk.CellRendererPixbuf()
+        renderer = Gtk.CellRendererPixbuf()
         column.pack_start(renderer, expand=False)
         column.add_attribute(renderer, 'pixbuf', 2)
 
-        renderer = gtk.CellRendererText()
+        renderer = Gtk.CellRendererText()
         column.pack_start(renderer, expand=True)
         column.add_attribute(renderer, 'text', 0)
         
@@ -1229,7 +1294,7 @@ class Wmain(SimpleGladeApp):
     def loadConfig(self):
         global groups
         
-        cp= ConfigParser.RawConfigParser(  )
+        cp= configparser.RawConfigParser(  )
         cp.read( CONFIG_FILE )
         
         #Leer configuracion general
@@ -1257,7 +1322,7 @@ class Wmain(SimpleGladeApp):
             conf.SHOW_TOOLBAR = cp.getboolean("window", "show-toolbar")
             conf.STARTUP_LOCAL = cp.getboolean("options","startup-local")
         except:
-            print "%s: %s" % (_("Entrada invalida en archivo de configuracion"), sys.exc_info()[1])
+            print("{}: {}".format( _("Entrada invalida en archivo de configuracion"), sys.exc_info()[1] ))
         
         #Leer shorcuts        
         scuts = {}
@@ -1351,7 +1416,7 @@ class Wmain(SimpleGladeApp):
                 
                 groups[host.group].append( host )
             except:                
-                print "%s: %s" % (_("Entrada invalida en archivo de configuracion"), sys.exc_info()[1])
+                print("{}: {}".format( (_("Entrada invalida en archivo de configuracion"), sys.exc_info()[1]) ))
 
     def is_node_collapsed(self, model, path, iter, nodes):
         if self.treeModel.get_value(iter, 1)==None and not self.treeServers.row_expanded(path):
@@ -1364,10 +1429,10 @@ class Wmain(SimpleGladeApp):
         
     def set_collapsed_nodes(self):
         self.treeServers.expand_all()
-        if self.treeModel.get_iter_root():
-            for node in conf.COLLAPSED_FOLDERS.split(","): 
-                if node!='':
-                    self.treeServers.collapse_row(node)
+        #if self.treeModel.get_iter_root():
+        #    for node in conf.COLLAPSED_FOLDERS.split(","): 
+        #        if node!='':
+        #            self.treeServers.collapse_row(node)
         
     def updateTree(self):
         for grupo in dict(groups):
@@ -1380,12 +1445,13 @@ class Wmain(SimpleGladeApp):
         self.menuServers.foreach(self.menuServers.remove)
         self.treeModel.clear()
         
-        iconHost = self.treeServers.render_icon("gtk-network", size=gtk.ICON_SIZE_BUTTON, detail=None)
-        iconDir = self.treeServers.render_icon("gtk-directory", size=gtk.ICON_SIZE_BUTTON, detail=None)             
+        iconHost = self.treeServers.render_icon("gtk-network", size=Gtk.IconSize.BUTTON, detail=None)
+        iconDir = self.treeServers.render_icon("gtk-directory", size=Gtk.IconSize.BUTTON, detail=None)             
         
         grupos = groups.keys()
-        grupos.sort(lambda x,y: cmp(y,x))
-        
+        #grupos.sort(lambda x,y: cmp(y,x))
+        sorted(grupos)
+
         for grupo in grupos:
             group = None
             path = ""
@@ -1401,10 +1467,10 @@ class Wmain(SimpleGladeApp):
                 
                 menu = self.get_folder_menu(self.menuServers, '', path)
                 if menu == None:
-                    menu = gtk.ImageMenuItem(folder)
-                    #menu.set_image(gtk.image_new_from_stock(gtk.STOCK_DIRECTORY, gtk.ICON_SIZE_MENU))
+                    menu = Gtk.ImageMenuItem(folder)
+                    #menu.set_image(Gtk.image_new_from_stock(Gtk.STOCK_DIRECTORY, Gtk.ICON_SIZE_MENU))
                     menuNode.prepend(menu)
-                    menuNode = gtk.Menu()
+                    menuNode = Gtk.Menu()
                     menu.set_submenu(menuNode)
                     menu.show()
                 else:
@@ -1413,8 +1479,8 @@ class Wmain(SimpleGladeApp):
             groups[grupo].sort(key=operator.attrgetter('name'))
             for host in groups[grupo]:
                 self.treeModel.append(group, [host.name, host, iconHost])
-                mnuItem = gtk.ImageMenuItem(host.name)
-                mnuItem.set_image(gtk.image_new_from_stock(gtk.STOCK_NETWORK, gtk.ICON_SIZE_MENU))
+                mnuItem = Gtk.ImageMenuItem(host.name)
+                mnuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_NETWORK, Gtk.ICON_SIZE_MENU))
                 mnuItem.show()
                 mnuItem.connect("activate", lambda arg, nb, h: self.addTab(nb, h), self.nbConsole, host) 
                 menuNode.append(mnuItem)
@@ -1433,7 +1499,7 @@ class Wmain(SimpleGladeApp):
                 return i
         
     def get_folder_menu(self, obj, folder, path):
-        if not obj or not (isinstance(obj,gtk.Menu) or isinstance(obj,gtk.MenuItem)):
+        if not obj or not (isinstance(obj,Gtk.Menu) or isinstance(obj,Gtk.MenuItem)):
             return None
         for item in obj.get_children():
             if path == folder+'/'+item.get_label():
@@ -1499,7 +1565,7 @@ class Wmain(SimpleGladeApp):
         os.rename(CONFIG_FILE + ".tmp", CONFIG_FILE)
         
     def on_tab_focus(self, widget, *args): 
-        if isinstance(widget, vte.Terminal):
+        if isinstance(widget, Vte.Terminal):
             self.current = widget
         
     def split_notebook(self, direction):        
@@ -1510,8 +1576,8 @@ class Wmain(SimpleGladeApp):
         if csp!=None and cnb.get_n_pages()>1:
             #Crear un hpaned, en el hijo 0 dejar el notebook y en el hijo 1 el nuevo notebook
             #El nuevo hpaned dejarlo como hijo del actual parent
-            hp = gtk.HPaned() if direction==HSPLIT else gtk.VPaned()
-            nb = gtk.Notebook()
+            hp = Gtk.HPaned() if direction==HSPLIT else Gtk.VPaned()
+            nb = Gtk.Notebook()
             nb.set_group_id(11)
             nb.connect('button_press_event', self.on_double_click, None)
             nb.connect('page_removed', self.on_page_removed)
@@ -1546,19 +1612,19 @@ class Wmain(SimpleGladeApp):
             self.current = cnb.get_nth_page(cnb.get_current_page()).get_children()[0]
 
     def find_notebook(self, widget, exclude=None):
-        if widget!=exclude and isinstance(widget, gtk.Notebook):
+        if widget!=exclude and isinstance(widget, Gtk.Notebook):
             return widget
         else:
             if not hasattr(widget, "get_children"):
                 return None
             for w in widget.get_children():
                 wid = self.find_notebook(w, exclude)
-                if wid!=exclude and isinstance(wid, gtk.Notebook):
+                if wid!=exclude and isinstance(wid, Gtk.Notebook):
                     return wid
             return None
 
     def find_active_terminal(self, widget):        
-        if isinstance(widget, vte.Terminal) and widget.is_focus():
+        if isinstance(widget, Vte.Terminal) and widget.is_focus():
             return widget
         else:
             if not hasattr(widget, "get_children"):
@@ -1566,7 +1632,7 @@ class Wmain(SimpleGladeApp):
                              
             for w in widget.get_children():
                 wid = self.find_active_terminal(w)                    
-                if isinstance(wid, vte.Terminal) and wid.is_focus():
+                if isinstance(wid, Vte.Terminal) and wid.is_focus():
                     return wid
             return None
 
@@ -1582,7 +1648,7 @@ class Wmain(SimpleGladeApp):
             paned.remove(save)
             container.add(save)
             if widget == self.nbConsole:                
-                if isinstance(save, gtk.Notebook):
+                if isinstance(save, Gtk.Notebook):
                     self.nbConsole = save
                 else:
                     self.nbConsole = self.find_notebook(save)
@@ -1604,16 +1670,16 @@ class Wmain(SimpleGladeApp):
             delattr(self, "check_notebook")
         
     def show_save_buffer(self, terminal):        
-        dlg = gtk.FileChooserDialog(title=_("Guardar como"), parent=self.wMain, action=gtk.FILE_CHOOSER_ACTION_SAVE)
-        dlg.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        dlg.add_button(gtk.STOCK_SAVE, gtk.RESPONSE_OK)        
+        dlg = Gtk.FileChooserDialog(title=_("Guardar como"), parent=self.wMain, action=Gtk.FILE_CHOOSER_ACTION_SAVE)
+        dlg.add_button(Gtk.STOCK_CANCEL, Gtk.RESPONSE_CANCEL)
+        dlg.add_button(Gtk.STOCK_SAVE, Gtk.RESPONSE_OK)        
         dlg.set_do_overwrite_confirmation(True)
         dlg.set_current_name( os.path.basename("gcm-buffer-%s.txt" % (time.strftime("%Y%m%d%H%M%S")) ))
         if not hasattr(self,'lastPath'):
             self.lastPath = os.path.expanduser("~")
         dlg.set_current_folder( self.lastPath )
         
-        if dlg.run() == gtk.RESPONSE_OK:
+        if dlg.run() == Gtk.RESPONSE_OK:
             filename = dlg.get_filename()
             self.lastPath = os.path.dirname(filename)            
     
@@ -1631,10 +1697,10 @@ class Wmain(SimpleGladeApp):
     
     def set_panel_visible(self, visibility):
         if visibility:
-            gobject.timeout_add(200, lambda : self.hpMain.set_position(self.hpMain.previous_position if self.hpMain.previous_position>10 else 150))
+            GObject.timeout_add(200, lambda : self.hpMain.set_position(self.hpMain.previous_position if self.hpMain.previous_position>10 else 150))
         else:       
             self.hpMain.previous_position = self.hpMain.get_position()
-            gobject.timeout_add(200, lambda : self.hpMain.set_position(0))
+            GObject.timeout_add(200, lambda : self.hpMain.set_position(0))
         self.get_widget("show_panel").set_active(visibility)
         conf.SHOW_PANEL = visibility
     
@@ -1651,14 +1717,14 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_wMain_destroy {
     def on_wMain_destroy(self, widget, *args):                
-        self.writeConfig()
-        gtk.main_quit()
+        #self.writeConfig()
+        Gtk.main_quit()
     #-- Wmain.on_wMain_destroy }
 
     #-- Wmain.on_wMain_delete_event {
     def on_wMain_delete_event(self, widget, *args):
         (conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT) = self.get_widget("wMain").get_size()
-        if conf.CONFIRM_ON_EXIT and self.count>0 and msgconfirm("%s %d %s" % (_("Hay"), self.count, _("consolas abiertas, confirma que desea salir?")) ) != gtk.RESPONSE_OK:
+        if conf.CONFIRM_ON_EXIT and self.count>0 and msgconfirm("%s %d %s" % (_("Hay"), self.count, _("consolas abiertas, confirma que desea salir?")) ) != Gtk.ResponseType.OK:
             return True
     #-- Wmain.on_wMain_delete_event }
 
@@ -1674,7 +1740,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_importar_servidores1_activate {
     def on_importar_servidores1_activate(self, widget, *args):
-        filename = show_open_dialog(parent=self.wMain, title=_("Abrir"), action=gtk.FILE_CHOOSER_ACTION_OPEN)
+        filename = show_open_dialog(parent=self.wMain, title=_("Abrir"), action=Gtk.FILE_CHOOSER_ACTION_OPEN)
         if filename != None:            
             password = inputbox(_('Importar Servidores'), _('Ingrese clave: '), password=True)
             if password == None:
@@ -1691,7 +1757,7 @@ class Wmain(SimpleGladeApp):
                     msgbox(_("Clave invalida"))
                     return
             
-                if msgconfirm(_(u'Se sobreescribirá la lista de servidores, continuar?')) != gtk.RESPONSE_OK:
+                if msgconfirm(_(u'Se sobreescribirá la lista de servidores, continuar?')) != Gtk.RESPONSE_OK:
                     return
                     
                 grupos={}
@@ -1716,7 +1782,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_exportar_servidores1_activate {
     def on_exportar_servidores1_activate(self, widget, *args):
-        filename = show_open_dialog(parent=self.wMain, title=_("Guardar como"), action=gtk.FILE_CHOOSER_ACTION_SAVE)
+        filename = show_open_dialog(parent=self.wMain, title=_("Guardar como"), action=Gtk.FILE_CHOOSER_ACTION_SAVE)
         if filename != None:
             password = inputbox(_('Exportar Servidores'), _('Ingrese clave: '), password=True)
             if password == None:
@@ -1745,9 +1811,9 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_salir1_activate {
     def on_salir1_activate(self, widget, *args):
-        (conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT) = self.get_widget("wMain").get_size()
-        self.writeConfig()
-        gtk.main_quit()
+        #(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT) = self.get_widget("wMain").get_size()
+        #self.writeConfig()
+        Gtk.main_quit()
     #-- Wmain.on_salir1_activate }
 
     #-- Wmain.on_show_toolbar_activate {
@@ -1767,19 +1833,19 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_double_click {
     def on_double_click(self, widget, event, *args):
-        if event.type in [gtk.gdk._2BUTTON_PRESS, gtk.gdk._3BUTTON_PRESS] and event.button == 1:
-            if isinstance(widget, gtk.Notebook):
+        if event.type in [Gtk.gdk._2BUTTON_PRESS, Gtk.gdk._3BUTTON_PRESS] and event.button == 1:
+            if isinstance(widget, Gtk.Notebook):
                 pos = event.x + widget.get_allocation().x
                 size = widget.get_tab_label(widget.get_nth_page(widget.get_n_pages()-1)).get_allocation()
                 if pos <= size.x + size.width + 2 * widget.get_property("tab-vborder") + 8 or event.x >= widget.get_allocation().width - widget.style_get_property("scroll-arrow-hlength"):
                     return True
-            self.addTab(widget if isinstance(widget, gtk.Notebook) else self.nbConsole, 'local')
+            self.addTab(widget if isinstance(widget, Gtk.Notebook) else self.nbConsole, 'local')
             return True
     #-- Wmain.on_double_click }
 
     #-- Wmain.on_btnLocal_clicked {
     def on_btnLocal_clicked(self, widget, *args):        
-        if self.current != None and self.current.get_parent()!=None and isinstance(self.current.get_parent().get_parent(), gtk.Notebook):
+        if self.current != None and self.current.get_parent()!=None and isinstance(self.current.get_parent().get_parent(), Gtk.Notebook):
             ntbk = self.current.get_parent().get_parent()
         else:
             ntbk = self.nbConsole
@@ -1844,14 +1910,14 @@ class Wmain(SimpleGladeApp):
             if not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):
                 #Eliminar solo el nodo
                 name = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],0)
-                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar el host"), name) ) == gtk.RESPONSE_OK:
+                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar el host"), name) ) == Gtk.RESPONSE_OK:
                     host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)
                     groups[host.group].remove(host)
                     self.updateTree()
             else:                
                 #Eliminar todo el grupo                
                 group = self.get_group(self.treeModel.iter_children(self.treeServers.get_selection().get_selected()[1]))
-                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar todos los hosts del grupo"), group) ) == gtk.RESPONSE_OK:                                
+                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar todos los hosts del grupo"), group) ) == Gtk.RESPONSE_OK:                                
                     try:
                         del groups[group]
                     except:
@@ -1917,14 +1983,14 @@ class Wmain(SimpleGladeApp):
     #-- Wmain.on_txtSearch_focus {
     def on_txtSearch_focus(self, widget, *args):
         if widget.get_text() == _('buscar...'):
-            widget.modify_text(gtk.STATE_NORMAL, gtk.gdk.Color('black'))
+            widget.modify_text(Gtk.STATE_NORMAL, Gtk.gdk.Color('black'))
             widget.set_text('')
     #-- Wmain.on_txtSearch_focus }
 
     #-- Wmain.on_txtSearch_focus_out_event {
     def on_txtSearch_focus_out_event(self, widget, *args):
         if widget.get_text() == '':
-            widget.modify_text(gtk.STATE_NORMAL, gtk.gdk.Color('darkgray'))
+            widget.modify_text(Gtk.STATE_NORMAL, Gtk.gdk.Color('darkgray'))
             widget.set_text(_('buscar...'))
     #-- Wmain.on_txtSearch_focus_out_event }
 
@@ -1963,10 +2029,10 @@ class Wmain(SimpleGladeApp):
             #agregar hijos de p a s 
             if hasattr(obj, "get_children"):
                 for w in obj.get_children():
-                    if isinstance(w, gtk.Notebook) or hasattr(w, "get_children"):
+                    if isinstance(w, Gtk.Notebook) or hasattr(w, "get_children"):
                         s.append(w)
             
-            if isinstance(obj, gtk.Notebook):
+            if isinstance(obj, Gtk.Notebook):
                 n = obj.get_n_pages()
                 for i in range(0,n):
                     terminal = obj.get_nth_page(i).get_child()                    
@@ -1982,7 +2048,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_hpMain_button_press_event {
     def on_hpMain_button_press_event(self, widget, event, *args):        
-        if event.type in [gtk.gdk._2BUTTON_PRESS]:            
+        if event.type in [Gtk.gdk._2BUTTON_PRESS]:            
             p = self.hpMain.get_position()
             self.set_panel_visible(p==0) 
     #-- Wmain.on_hpMain_button_press_event }
@@ -1997,7 +2063,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_tvServers_button_press_event {
     def on_tvServers_button_press_event(self, widget, event, *args):
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)            
             pthinfo = self.treeServers.get_path_at_pos(x, y)
@@ -2047,8 +2113,8 @@ class Host():
             self.compressionLevel = self.get_arg(args,'')
             self.extra_params = self.get_arg(args, '')
             self.log = self.get_arg(args, False)
-            self.backspace_key = self.get_arg(args, int(vte.ERASE_AUTO))
-            self.delete_key = self.get_arg(args, int(vte.ERASE_AUTO))
+            self.backspace_key = self.get_arg(args, int(Vte.EraseBinding.AUTO))
+            self.delete_key = self.get_arg(args, int(Vte.EraseBinding.AUTO))
         except:
             pass
        
@@ -2099,8 +2165,8 @@ class HostUtils:
         compressionLevel = HostUtils.get_val(cp, section, "compression-level", "")
         extra_params = HostUtils.get_val(cp, section, "extra_params", "")
         log = HostUtils.get_val(cp, section, "log", False)
-        backspace_key = int(HostUtils.get_val(cp, section, "backspace-key", int(vte.ERASE_AUTO)))
-        delete_key = int(HostUtils.get_val(cp, section, "delete-key", int(vte.ERASE_AUTO)))
+        backspace_key = int(HostUtils.get_val(cp, section, "backspace-key", int(Vte.ERASE_AUTO)))
+        delete_key = int(HostUtils.get_val(cp, section, "delete-key", int(Vte.ERASE_AUTO)))
         h = Host(group, name, description, host, user, password, private_key, port, tunnel, ctype, commands, keepalive, fcolor, bcolor, x11, agent, compression, compressionLevel,  extra_params, log, backspace_key, delete_key)
         return h
 
@@ -2139,13 +2205,13 @@ class Whost(SimpleGladeApp):
         path = os.path.join(glade_dir, path)
         SimpleGladeApp.__init__(self, path, root, domain, **kwargs)
         
-        self.treeModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.treeModel = Gtk.ListStore(GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.treeTunel.set_model(self.treeModel)
-        column = gtk.TreeViewColumn(_("Local"), gtk.CellRendererText(), text=0)
+        column = Gtk.TreeViewColumn(_("Local"), Gtk.CellRendererText(), text=0)
         self.treeTunel.append_column( column )        
-        column = gtk.TreeViewColumn(_("Host"), gtk.CellRendererText(), text=1)
+        column = Gtk.TreeViewColumn(_("Host"), Gtk.CellRendererText(), text=1)
         self.treeTunel.append_column( column )        
-        column = gtk.TreeViewColumn(_("Remoto"), gtk.CellRendererText(), text=2)
+        column = Gtk.TreeViewColumn(_("Remoto"), Gtk.CellRendererText(), text=2)
         self.treeTunel.append_column( column )        
 
 
@@ -2248,13 +2314,13 @@ class Whost(SimpleGladeApp):
             fcolor="#FFFFFF"
             bcolor="#000000"
  
-        self.btnFColor.set_color(gtk.gdk.Color(fcolor))
-        self.btnBColor.set_color(gtk.gdk.Color(bcolor))
+        self.btnFColor.set_color(Gtk.gdk.Color(fcolor))
+        self.btnBColor.set_color(Gtk.gdk.Color(bcolor))
         
         m = self.btnFColor.get_colormap() 
         color = m.alloc_color("red")
         style = self.btnFColor.get_style().copy()
-        style.bg[gtk.STATE_NORMAL] = color
+        style.bg[Gtk.STATE_NORMAL] = color
         self.btnFColor.set_style(style)
         self.btnFColor.queue_draw()
         
@@ -2513,7 +2579,7 @@ class Whost(SimpleGladeApp):
     #-- Whost.on_btnBrowse_clicked {
     def on_btnBrowse_clicked(self, widget, *args):
         global wMain
-        filename = show_open_dialog(parent=wMain.wMain, title=_("Abrir"), action=gtk.FILE_CHOOSER_ACTION_OPEN)
+        filename = show_open_dialog(parent=wMain.wMain, title=_("Abrir"), action=Gtk.FILE_CHOOSER_ACTION_OPEN)
         if filename != None:
             self.txtPrivateKey.set_text(filename)
     #-- Whost.on_btnBrowse_clicked }
@@ -2591,8 +2657,8 @@ class Wconfig(SimpleGladeApp):
             fcolor=conf.FONT_COLOR
             bcolor=conf.BACK_COLOR            
  
-        self.btnFColor.set_color(gtk.gdk.Color(fcolor))
-        self.btnBColor.set_color(gtk.gdk.Color(bcolor))
+        self.btnFColor.set_color(Gtk.gdk.Color(fcolor))
+        self.btnBColor.set_color(Gtk.gdk.Color(bcolor))
         self.btnFColor.selected_color=fcolor
         self.btnBColor.selected_color=bcolor
         
@@ -2606,41 +2672,41 @@ class Wconfig(SimpleGladeApp):
         self.btnFont.get_child().modify_font(self.btnFont.selected_font)
         
         #commandos
-        self.treeModel = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.treeModel = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.treeCmd.set_model(self.treeModel)
-        column = gtk.TreeViewColumn(_(u"Acción"), gtk.CellRendererText(), text=0)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column = Gtk.TreeViewColumn(_(u"Acción"), Gtk.CellRendererText(), text=0)
+        column.set_sizing(Gtk.TREE_VIEW_COLUMN_FIXED)
         column.set_expand(True)
         self.treeCmd.append_column( column )
         
-        renderer = gtk.CellRendererText()
+        renderer = Gtk.CellRendererText()
         renderer.set_property("editable", True)
         renderer.connect('edited', self.on_edited, self.treeModel, 1)
         renderer.connect('editing-started', self.on_editing_started, self.treeModel, 1)
-        column = gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+        column = Gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
+        column.set_sizing(Gtk.TREE_VIEW_COLUMN_AUTOSIZE)
         column.set_expand(False)        
         self.treeCmd.append_column( column )
         
-        self.treeModel2 = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.treeModel2 = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.treeCustom.set_model(self.treeModel2)
         renderer = MultilineCellRenderer()
         renderer.set_property("editable", True)
         renderer.connect('edited', self.on_edited, self.treeModel2, 0)
-        column = gtk.TreeViewColumn(_("Comando"), renderer, text=0)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column = Gtk.TreeViewColumn(_("Comando"), renderer, text=0)
+        column.set_sizing(Gtk.TREE_VIEW_COLUMN_FIXED)
         column.set_expand(True)       
         self.treeCustom.append_column( column )
-        renderer = gtk.CellRendererText()
+        renderer = Gtk.CellRendererText()
         renderer.set_property("editable", True)
         renderer.connect('edited', self.on_edited, self.treeModel2, 1)
         renderer.connect('editing-started', self.on_editing_started, self.treeModel2, 1)        
-        column = gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+        column = Gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
+        column.set_sizing(Gtk.TREE_VIEW_COLUMN_AUTOSIZE)
         column.set_expand(False)        
         self.treeCustom.append_column( column )
         
-        slist = sorted(shortcuts.iteritems(), key=lambda (k,v): (v,k))
+        slist = sorted(shortcuts.iteritems(), key=(lambda k_v: (k_v[1], k_v[0]) ))
         
         for s in slist:
             if type(s[1])==list:
@@ -2658,15 +2724,15 @@ class Wconfig(SimpleGladeApp):
         self.tblGeneral.rows += 1
         value = eval(field)
         if ptype==bool:
-            obj = gtk.CheckButton()
+            obj = Gtk.CheckButton()
             obj.set_label(name)
             obj.set_active(value)
             obj.set_alignment(0, 0.5)            
             obj.show()
             obj.field=field
-            self.tblGeneral.attach(obj, 0, 2, x, x+1, gtk.EXPAND|gtk.FILL, 0)            
+            self.tblGeneral.attach(obj, 0, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)            
         elif ptype==int:            
-            obj = gtk.SpinButton(climb_rate=10)
+            obj = Gtk.SpinButton(climb_rate=10)
             if len(args)==2:
                 obj.set_range(args[0], args[1])
             obj.set_increments(1, 10)
@@ -2674,33 +2740,33 @@ class Wconfig(SimpleGladeApp):
             obj.set_value(value)                        
             obj.show()
             obj.field=field
-            lbl = gtk.Label(name)
+            lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, gtk.EXPAND|gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
         elif ptype==list:
-            obj = gtk.combo_box_new_text()
+            obj = Gtk.combo_box_new_text()
             for s in args[0]:
                 obj.append_text(s)
             obj.set_active(value)
             obj.show()
             obj.field=field
-            lbl = gtk.Label(name)
+            lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, gtk.EXPAND|gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
         else:            
-            obj = gtk.Entry()
+            obj = Gtk.Entry()
             obj.set_text(value)            
             obj.show()
             obj.field=field
-            lbl = gtk.Label(name)
+            lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, gtk.EXPAND|gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
         
     def on_edited(self, widget, rownum, value, model, colnum):        
         model[rownum][colnum] = value
@@ -2730,11 +2796,11 @@ class Wconfig(SimpleGladeApp):
     def on_okbutton1_clicked(self, widget, *args):
         for obj in self.tblGeneral:
             if hasattr(obj, "field"):
-                if isinstance(obj, gtk.CheckButton):
+                if isinstance(obj, Gtk.CheckButton):
                     value = obj.get_active()
-                elif isinstance(obj, gtk.SpinButton):
+                elif isinstance(obj, Gtk.SpinButton):
                     value = obj.get_value_as_int()
-                elif isinstance(obj, gtk.ComboBox):
+                elif isinstance(obj, Gtk.ComboBox):
                     value = obj.get_active()
                 else:
                     value = '"%s"' % (obj.get_text())
@@ -2806,7 +2872,7 @@ class Wconfig(SimpleGladeApp):
 
     #-- Wconfig.on_treeCommands_key_press_event {
     def on_treeCommands_key_press_event(self, widget, event, *args):
-        if self.capture_keys and len(args)==3 and (event.keyval != gtk.keysyms.Return or
+        if self.capture_keys and len(args)==3 and (event.keyval != Gtk.keysyms.Return or
                                                    event.state != 0):
             model, rownum, colnum = args           
             widget.set_text(get_key_name(event))            
@@ -2814,7 +2880,7 @@ class Wconfig(SimpleGladeApp):
 
 
 class Wcluster(SimpleGladeApp):
-    COLOR = gtk.gdk.Color('#FFFC00')
+    COLOR = Gdk.RGBA(1.0, 0.99, 0.0) #FFFC00
     
     def __init__(self, path="gnome-connection-manager.glade",
                  root="wCluster",
@@ -2826,17 +2892,17 @@ class Wcluster(SimpleGladeApp):
     #-- Wcluster.new {
     def new(self):        
         self.treeHosts = self.get_widget('treeHosts')
-        self.treeStore = gtk.TreeStore( gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gobject.TYPE_OBJECT )
+        self.treeStore = Gtk.TreeStore( GObject.TYPE_BOOLEAN, GObject.TYPE_STRING, GObject.TYPE_OBJECT )
         for x in self.terms:
             self.treeStore.append( None, (False, x[0], x[1]) )
         self.treeHosts.set_model( self.treeStore )               
         
-        crt = gtk.CellRendererToggle()
+        crt = Gtk.CellRendererToggle()
         crt.set_property('activatable', True)
         crt.connect('toggled', self.on_active_toggled)        
-        col = gtk.TreeViewColumn(_("Activar"), crt, active=0)               
+        col = Gtk.TreeViewColumn(_("Activar"), crt, active=0)               
         self.treeHosts.append_column( col )
-        self.treeHosts.append_column(gtk.TreeViewColumn(_("Host"), gtk.CellRendererText(), text=1 ))
+        self.treeHosts.append_column(Gtk.TreeViewColumn(_("Host"), Gtk.CellRendererText(), text=1 ))
         self.get_widget("txtCommands").history = []
     #-- Wcluster.new }
 
@@ -2894,7 +2960,7 @@ class Wcluster(SimpleGladeApp):
 
     #-- Wcluster.on_txtCommands_key_press_event {
     def on_txtCommands_key_press_event(self, widget, event, *args):        
-        if not event.state & gtk.gdk.CONTROL_MASK and gtk.gdk.keyval_name(event.keyval).upper() == 'RETURN':           
+        if not event.state & Gtk.gdk.CONTROL_MASK and Gtk.gdk.keyval_name(event.keyval).upper() == 'RETURN':           
            buf = widget.get_buffer()
            text = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
            buf.set_text('')
@@ -2904,9 +2970,9 @@ class Wcluster(SimpleGladeApp):
            widget.history.append(text)
            widget.history_index = -1
            return True
-        if event.state & gtk.gdk.CONTROL_MASK and gtk.gdk.keyval_name(event.keyval).upper() in ['UP','DOWN']:
+        if event.state & Gtk.gdk.CONTROL_MASK and Gtk.gdk.keyval_name(event.keyval).upper() in ['UP','DOWN']:
             if len(widget.history) > 0:
-                if gtk.gdk.keyval_name(event.keyval).upper() == 'UP':
+                if Gtk.gdk.keyval_name(event.keyval).upper() == 'UP':
                     widget.history_index -= 1
                     if widget.history_index < -1:
                         widget.history_index = len(widget.history) - 1
@@ -2918,56 +2984,58 @@ class Wcluster(SimpleGladeApp):
     #-- Wcluster.on_txtCommands_key_press_event }
 
 
-class NotebookTabLabel(gtk.HBox):
+class NotebookTabLabel(Gtk.HBox):
     '''Notebook tab label with close button.
     '''
     def __init__(self, title, owner_, widget_, popup_):
-        gtk.HBox.__init__(self, False, 0)
+        Gtk.HBox.__init__(self, False, 0)
         
         self.title = title
         self.owner = owner_
-        self.eb = gtk.EventBox()
-        label = self.label = gtk.Label()
+        self.eb = Gtk.EventBox()
+        label = self.label = Gtk.Label()
         self.eb.connect('button-press-event', self.popupmenu, label)
         label.set_alignment(0.0, 0.5)
         label.set_text(title)
         self.eb.add(label)        
-        self.pack_start(self.eb)        
+        self.pack_start(self.eb, expand=False, fill=False, padding=1 )        
         label.show()        
         self.eb.show()                
-        close_image = gtk.image_new_from_stock(gtk.STOCK_CLOSE, gtk.ICON_SIZE_MENU)
-        image_w, image_h = gtk.icon_size_lookup(gtk.ICON_SIZE_MENU)
-        self.widget=widget_
-        self.popup = popup_        
-        close_btn = gtk.Button()
-        close_btn.set_relief(gtk.RELIEF_NONE)
+        close_image = Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)
+        result, image_w, image_h = Gtk.IconSize.lookup(Gtk.IconSize.MENU)
+
+        #self.widget = widget_
+        self.popup  = popup_  
+
+        close_btn   = Gtk.Button()
+        close_btn.set_relief(Gtk.ReliefStyle.NONE)
         close_btn.connect('clicked', self.on_close_tab, owner_)
         close_btn.set_size_request(image_w+7, image_h+6)
         close_btn.add(close_image)
         style = close_btn.get_style();
-        self.eb2 = gtk.EventBox()
+        self.eb2 = Gtk.EventBox()
         self.eb2.add(close_btn)        
-        self.pack_start(self.eb2, False, False)
+        self.pack_start(self.eb2, expand=False,  fill=False, padding=1)
         self.eb2.show()
         close_btn.show_all()  
         self.is_active = True
         self.show()
         
     def change_color(self, color):
-        self.eb.modify_bg(gtk.STATE_ACTIVE, color)
-        self.eb2.modify_bg(gtk.STATE_ACTIVE, color)
-        self.eb.modify_bg(gtk.STATE_NORMAL, color)
-        self.eb2.modify_bg(gtk.STATE_NORMAL, color)
+        self.eb.modify_bg(Gtk.STATE_ACTIVE, color)
+        self.eb2.modify_bg(Gtk.STATE_ACTIVE, color)
+        self.eb.modify_bg(Gtk.STATE_NORMAL, color)
+        self.eb2.modify_bg(Gtk.STATE_NORMAL, color)
         
     def restore_color(self):
         bg = self.label.style.bg
-        self.eb.modify_bg(gtk.STATE_ACTIVE, bg[gtk.STATE_ACTIVE])
-        self.eb2.modify_bg(gtk.STATE_ACTIVE, bg[gtk.STATE_ACTIVE])
-        self.eb.modify_bg(gtk.STATE_NORMAL, bg[gtk.STATE_NORMAL])
-        self.eb2.modify_bg(gtk.STATE_NORMAL, bg[gtk.STATE_NORMAL])
+        self.eb.modify_bg(Gtk.STATE_ACTIVE, bg[Gtk.STATE_ACTIVE])
+        self.eb2.modify_bg(Gtk.STATE_ACTIVE, bg[Gtk.STATE_ACTIVE])
+        self.eb.modify_bg(Gtk.STATE_NORMAL, bg[Gtk.STATE_NORMAL])
+        self.eb2.modify_bg(Gtk.STATE_NORMAL, bg[Gtk.STATE_NORMAL])
         
     def on_close_tab(self, widget, notebook, *args):
-        if conf.CONFIRM_ON_CLOSE_TAB and msgconfirm("%s [%s]?" % ( _("Cerrar consola"), self.label.get_text().strip()) ) != gtk.RESPONSE_OK:
+        if conf.CONFIRM_ON_CLOSE_TAB and msgconfirm("%s [%s]?" % ( _("Cerrar consola"), self.label.get_text().strip()) ) != Gtk.RESPONSE_OK:
             return True
         
         self.close_tab(widget)
@@ -2999,7 +3067,7 @@ class NotebookTabLabel(gtk.HBox):
         return self.label.get_text()
 
     def popupmenu(self, widget, event, label):
-        if event.type == gtk.gdk.BUTTON_PRESS and event.button == 3:    
+        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:    
             self.popup.label = self.label
             if self.is_active:
                 self.popup.mnuReopen.hide()
@@ -3010,41 +3078,41 @@ class NotebookTabLabel(gtk.HBox):
             self.popup.mnuLog.set_active( hasattr(self.widget.get_child(), "log_handler_id") and self.widget.get_child().log_handler_id != 0 )
             self.popup.popup( None, None, None, event.button, event.time)
             return True
-        elif event.type == gtk.gdk.BUTTON_PRESS and event.button == 2:    
+        elif event.type == Gtk.gdk.BUTTON_PRESS and event.button == 2:    
             self.close_tab(self.widget)
 
-class EntryDialog( gtk.Dialog):
+class EntryDialog( Gtk.Dialog):
     def __init__(self, title, message, default_text='', modal=True, mask=False):
-        gtk.Dialog.__init__(self)
+        Gtk.Dialog.__init__(self)
         self.set_title(title)
         self.connect("destroy", self.quit)
         self.connect("delete_event", self.quit)
         if modal:
             self.set_modal(True)
-        box = gtk.VBox(spacing=10)
+        box = Gtk.VBox(spacing=10)
         box.set_border_width(10)
         self.vbox.pack_start(box)
         box.show()
         if message:
-            label = gtk.Label(message)
+            label = Gtk.Label(message)
             box.pack_start(label)
             label.show()
-        self.entry = gtk.Entry()
+        self.entry = Gtk.Entry()
         self.entry.set_text(default_text)
         self.entry.set_visibility(not mask)
         box.pack_start(self.entry)
         self.entry.show()
         self.entry.grab_focus()
-        button = gtk.Button(stock=gtk.STOCK_OK)
+        button = Gtk.Button(stock=Gtk.STOCK_OK)
         button.connect("clicked", self.click)
         self.entry.connect("activate", self.click)
-        button.set_flags(gtk.CAN_DEFAULT)
+        button.set_flags(Gtk.CAN_DEFAULT)
         self.action_area.pack_start(button)
         button.show()
         button.grab_default()
-        button = gtk.Button(stock=gtk.STOCK_CANCEL)
+        button = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         button.connect("clicked", self.quit)
-        button.set_flags(gtk.CAN_DEFAULT)
+        button.set_flags(Gtk.CAN_DEFAULT)
         self.action_area.pack_start(button)
         button.show()
         self.ret = None
@@ -3055,16 +3123,16 @@ class EntryDialog( gtk.Dialog):
 
     def click(self, button):
         self.value = self.entry.get_text()        
-        self.response(gtk.RESPONSE_OK)
+        self.response(Gtk.RESPONSE_OK)
 
 
 
-class CellTextView(gtk.TextView, gtk.CellEditable):
+class CellTextView(Gtk.TextView, Gtk.CellEditable):
 
     __gtype_name__ = "CellTextView"
 
     __gproperties__ = {
-            'editing-canceled': (bool, 'Editing cancelled', 'Editing was cancelled', False, gobject.PARAM_READWRITE),
+            'editing-canceled': (bool, 'Editing cancelled', 'Editing was cancelled', False, GObject.ParamFlags.READWRITE),
         }
         
     def do_editing_done(self, *args):
@@ -3085,12 +3153,12 @@ class CellTextView(gtk.TextView, gtk.CellEditable):
         self.get_buffer().set_text(text)
 
 
-class MultilineCellRenderer(gtk.CellRendererText):
+class MultilineCellRenderer(Gtk.CellRendererText):
 
     __gtype_name__ = "MultilineCellRenderer"
 
     def __init__(self):
-        gtk.CellRendererText.__init__(self)
+        Gtk.CellRendererText.__init__(self)
         self._in_editor_menu = False
 
     def _on_editor_focus_out_event(self, editor, *args):
@@ -3099,11 +3167,11 @@ class MultilineCellRenderer(gtk.CellRendererText):
         self.emit("editing-canceled")
 
     def _on_editor_key_press_event(self, editor, event):
-        if event.state & (gtk.gdk.SHIFT_MASK | gtk.gdk.CONTROL_MASK): return
-        if event.keyval in (gtk.keysyms.Return, gtk.keysyms.KP_Enter):
+        if event.state & (Gtk.gdk.SHIFT_MASK | Gtk.gdk.CONTROL_MASK): return
+        if event.keyval in (Gtk.keysyms.Return, Gtk.keysyms.KP_Enter):
             editor.remove_widget()
             self.emit("edited", editor.get_data("path"), editor.get_text())
-        elif event.keyval == gtk.keysyms.Escape:
+        elif event.keyval == Gtk.keysyms.Escape:
             editor.remove_widget()
             self.emit("editing-canceled")
 
@@ -3135,7 +3203,7 @@ class CheckUpdates(Thread):
         self.parent = p
         
     def msg(self, text, parent):        
-        self.msgBox = gtk.MessageDialog(parent, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, text)
+        self.msgBox = Gtk.MessageDialog(parent, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK, text)
         self.msgBox.set_icon_from_file(ICON_PATH)
         self.msgBox.connect('response', self.on_clicked)
         self.msgBox.show_all()      
@@ -3152,7 +3220,7 @@ class CheckUpdates(Thread):
             if web.getcode()==200:
                 new_version = web.readline().strip()
                 if len(new_version)>0 and new_version != app_version:                                
-                    self.tag = gobject.timeout_add(0, self.msg, "%s\n\nVERSION: %s" % (_("Hay una nueva version disponible en http://kuthulu.com/gcm/?module=download"), new_version), self.parent.get_widget("wMain"))
+                    self.tag = GObject.timeout_add(0, self.msg, "%s\n\nVERSION: %s" % (_("Hay una nueva version disponible en http://kuthulu.com/gcm/?module=download"), new_version), self.parent.get_widget("wMain"))
         except:            
             pass
 

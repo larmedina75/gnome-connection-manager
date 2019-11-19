@@ -7,7 +7,8 @@
 import sys, hashlib, string, getpass
 from copy import copy
 from random import randint
-import StringIO, base64
+from io import StringIO
+import base64
 
 # The actual Rijndael specification includes variable block size, but
 # AES uses a fixed block size of 16 bytes (128 bits)
