@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.22.1 -->
 <!--*- mode: xml -*-->
 <interface>
-  <requires lib="gtk+" version="3.0"/>
+  <requires lib="gtk+" version="3.10"/>
   <object class="GtkImage">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1421,7 +1421,7 @@ Ej: ##D=1000&lt;/span&gt;</property>
 
 Based on Gnome Connection Managet 
 by Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
-    <property name="comments">A ssh connection manager for gnome ported to python 3</property>
+    <property name="comments">A simple ssh connection manager for gnome ported to python 3</property>
     <property name="license">This is gnome-connection-manager, written and maintained by
 Renzo Bertuzzi L. &lt;kuthulu@gmail.com&gt;
 Project's Homepage: http://kuthulu.com/gcm
@@ -1441,6 +1441,8 @@ You should have received a copy of the GNU General Public License with
 the Debian GNU/Linux distribution in file /usr/share/common-licenses/GPL-3;
 if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.</property>
+    <property name="authors">Luis Armando Medina Avitia (lamedina@gmail.com)
+Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
     <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
     <property name="logo">icon.png</property>
     <signal name="response" handler="on_wAbout_close" swapped="no"/>
@@ -2542,98 +2544,13 @@ if not, write to the Free Software Foundation, Inc.,
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="guardar_como4">
+                      <object class="GtkImageMenuItem" id="acerca_de1">
+                        <property name="label">gtk-about</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
-                        <property name="use_stock">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="importar_servidores4">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Importar lista de servidores desde un archivo</property>
-                        <property name="use_stock">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-save</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-save-as</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-quit</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="menuitem6">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="menuitem1_menu4">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkImageMenuItem" id="guardar_como5">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
-                        <property name="use_stock">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="importar_servidores5">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Importar lista de servidores desde un archivo</property>
-                        <property name="use_stock">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-save</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem">
-                        <property name="label">gtk-save-as</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <signal name="activate" handler="on_acerca_de1_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>

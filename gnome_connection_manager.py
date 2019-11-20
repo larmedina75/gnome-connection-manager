@@ -1087,30 +1087,27 @@ class Wmain(SimpleGladeApp):
         try:
             v = Vte.Terminal()
             #v.set_word_chars(conf.WORD_SEPARATORS)
-            v.spawn_sync(
-                Vte.PtyFlags.DEFAULT,
-                os.environ['HOME'],
-                ["/bin/sh"],
-                [],
-                GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-                None,
-                None,
-                )
             v.set_scrollback_lines(conf.BUFFER_LINES)
             #if v.get_emulation() != os.getenv("TERM"):
             #    os.environ['TERM'] = v.get_emulation()
             
             if isinstance(host, str):
                 host = Host('', host) 
-            
-            fcolor = host.font_color
-            bcolor = host.back_color
-            if fcolor == '' or fcolor == None or bcolor == '' or bcolor == None:
-                fcolor = conf.FONT_COLOR
-                bcolor = conf.BACK_COLOR
+
+            fcolor = Gdk.RGBA()
+            bcolor = Gdk.RGBA()
+
+            print(host.font_color, fcolor, conf.FONT_COLOR, host.back_color, bcolor, conf.BACK_COLOR)
+
+            if host.font_color == '' or host.font_color == None or host.back_color == '' or host.back_color == None:
+                fcolor.parse(conf.FONT_COLOR)
+                bcolor.parse(conf.BACK_COLOR)
+            else:
+                fcolor.parse(host.font_color) 
+                bcolor.parse(host.back_color)
                 
-            if len(fcolor)>0 and len(bcolor)>0:
-                v.set_colors(Gtk.gdk.Color(fcolor), Gtk.gdk.Color(bcolor), [])
+            #if len(fcolor)>0 and len(bcolor)>0:
+            v.set_colors(fcolor, bcolor, [])
 
             if len(conf.FONT)==0:
                 conf.FONT = 'monospace'
@@ -1513,7 +1510,7 @@ class Wmain(SimpleGladeApp):
     def writeConfig(self): 
         global groups
         
-        cp= ConfigParser.RawConfigParser( )
+        cp= configparser.RawConfigParser( )
         cp.read( CONFIG_FILE + ".tmp" )
         
         cp.add_section("options")
@@ -1719,7 +1716,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_wMain_destroy {
     def on_wMain_destroy(self, widget, *args):                
-        #self.writeConfig()
+        self.writeConfig()
         Gtk.main_quit()
     #-- Wmain.on_wMain_destroy }
 
@@ -1750,7 +1747,7 @@ class Wmain(SimpleGladeApp):
             
             #abrir archivo con lista de servers y cargarlos en el arbol
             try:
-                cp= ConfigParser.RawConfigParser( )
+                cp= configparser.RawConfigParser( )
                 cp.read( filename )
             
                 #validar el pass
@@ -1791,7 +1788,7 @@ class Wmain(SimpleGladeApp):
                 return
                 
             try:
-                cp= ConfigParser.RawConfigParser( )
+                cp= configparser.RawConfigParser( )
                 cp.read( filename + ".tmp" )
                 i=1
                 cp.add_section("gcm")
@@ -1814,7 +1811,7 @@ class Wmain(SimpleGladeApp):
     #-- Wmain.on_salir1_activate {
     def on_salir1_activate(self, widget, *args):
         #(conf.WINDOW_WIDTH, conf.WINDOW_HEIGHT) = self.get_widget("wMain").get_size()
-        #self.writeConfig()
+        self.writeConfig()
         Gtk.main_quit()
     #-- Wmain.on_salir1_activate }
 
@@ -2618,6 +2615,8 @@ class Wconfig(SimpleGladeApp):
                  domain=domain_name, **kwargs):
         path = os.path.join(glade_dir, path)
         SimpleGladeApp.__init__(self, path, root, domain, **kwargs)
+        he, wi = self.get_size()
+        print(he, wi)
 
     #-- Wconfig.new {
     def new(self):
@@ -2650,21 +2649,23 @@ class Wconfig(SimpleGladeApp):
             self.get_widget("chkDefaultColors").set_active(True)
             self.btnFColor.set_sensitive(False)
             self.btnBColor.set_sensitive(False)
-            fcolor=Gdk.Color.parse("#FFFFFF").color
-            bcolor=Gdk.Color.parse("#000000").color
+            fcolor=Gdk.RGBA()
+            fcolor.parse("#FFFFFF")
+            bcolor=Gdk.RGBA()
+            bcolor.parse("#000000")
         else:
             self.get_widget("chkDefaultColors").set_active(False)
             self.btnFColor.set_sensitive(True)
             self.btnBColor.set_sensitive(True)
-            fcolor=Gdk.Color.parse(conf.FONT_COLOR).color
-            bcolor=Gdk.Color.parse(conf.BACK_COLOR).color      
- 
-        print(fcolor, bcolor)
+            fcolor=Gdk.RGBA()
+            fcolor.parse(conf.FONT_COLOR, )
+            bcolor=Gdk.RGBA()
+            bcolor.parse(conf.BACK_COLOR)
 
-        self.btnFColor.set_color(fcolor)
-        self.btnBColor.set_color(bcolor)
-        self.btnFColor.color=fcolor
-        self.btnBColor.color=bcolor
+        self.btnFColor.set_rgba(fcolor)
+        self.btnBColor.set_rgba(bcolor)
+        #self.btnFColor.color=fcolor
+        #self.btnBColor.color=bcolor
         
         #Fuente
         if len(conf.FONT)==0 or conf.FONT == 'monospace':
@@ -2679,7 +2680,7 @@ class Wconfig(SimpleGladeApp):
         self.treeModel = Gtk.TreeStore(GObject.TYPE_STRING, GObject.TYPE_STRING)
         self.treeCmd.set_model(self.treeModel)
         column = Gtk.TreeViewColumn(_(u"Acción"), Gtk.CellRendererText(), text=0)
-        column.set_sizing(Gtk.TREE_VIEW_COLUMN_FIXED)
+        column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
         column.set_expand(True)
         self.treeCmd.append_column( column )
         
@@ -2688,7 +2689,7 @@ class Wconfig(SimpleGladeApp):
         renderer.connect('edited', self.on_edited, self.treeModel, 1)
         renderer.connect('editing-started', self.on_editing_started, self.treeModel, 1)
         column = Gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
-        column.set_sizing(Gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+        column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         column.set_expand(False)        
         self.treeCmd.append_column( column )
         
@@ -2698,7 +2699,7 @@ class Wconfig(SimpleGladeApp):
         renderer.set_property("editable", True)
         renderer.connect('edited', self.on_edited, self.treeModel2, 0)
         column = Gtk.TreeViewColumn(_("Comando"), renderer, text=0)
-        column.set_sizing(Gtk.TREE_VIEW_COLUMN_FIXED)
+        column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
         column.set_expand(True)       
         self.treeCustom.append_column( column )
         renderer = Gtk.CellRendererText()
@@ -2706,11 +2707,11 @@ class Wconfig(SimpleGladeApp):
         renderer.connect('edited', self.on_edited, self.treeModel2, 1)
         renderer.connect('editing-started', self.on_editing_started, self.treeModel2, 1)        
         column = Gtk.TreeViewColumn(_("Atajo"), renderer, text=1)
-        column.set_sizing(Gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+        column.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         column.set_expand(False)        
         self.treeCustom.append_column( column )
         
-        slist = sorted(shortcuts.iteritems(), key=(lambda k_v: (k_v[1], k_v[0]) ))
+        slist = sorted(shortcuts.items(), key=(lambda k_v: (k_v[1], k_v[0]) ))
         
         for s in slist:
             if type(s[1])==list:
@@ -2815,13 +2816,13 @@ class Wconfig(SimpleGladeApp):
                     value = '"%s"' % (obj.get_text())
                 exec("%s=%s" % (obj.field, value))
         
-        if self.get_widget("chkDefaultColors").get_active():
+        if self.get_widget("chkDefaultColors1").get_active():
             conf.FONT_COLOR=""
             conf.BACK_COLOR=""
         else:
-            conf.FONT_COLOR = self.btnFColor.selected_color
-            conf.BACK_COLOR = self.btnBColor.selected_color
-        
+            conf.FONT_COLOR = self.btnFColor.get_rgba().to_string()
+            conf.BACK_COLOR = self.btnBColor.get_rgba().to_string()
+
         if self.btnFont.get_font_name() != 'monospace' and not self.chkDefaultFont.get_active():
             conf.FONT = self.btnFont.selected_font.to_string()
         else:
