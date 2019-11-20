@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.22.1 -->
 <!--*- mode: xml -*-->
 <interface>
-  <requires lib="gtk+" version="3.0"/>
+  <requires lib="gtk+" version="3.10"/>
   <object class="GtkImage">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -742,6 +742,9 @@ blanco: por defecto
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="n_rows">2</property>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -1849,6 +1852,8 @@ if not, write to the Free Software Foundation, Inc.,
           <object class="GtkButtonBox" id="hbuttonbox1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_top">7</property>
+            <property name="margin_bottom">7</property>
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="button1">
@@ -1949,6 +1954,12 @@ if not, write to the Free Software Foundation, Inc.,
                 <child>
                   <placeholder/>
                 </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
               </object>
             </child>
             <child type="tab">
@@ -1969,6 +1980,10 @@ if not, write to the Free Software Foundation, Inc.,
               <object class="GtkTable" id="table6">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">7</property>
+                <property name="margin_right">7</property>
+                <property name="margin_top">7</property>
+                <property name="margin_bottom">7</property>
                 <property name="border_width">1</property>
                 <property name="n_rows">6</property>
                 <property name="n_columns">2</property>
@@ -2095,24 +2110,6 @@ if not, write to the Free Software Foundation, Inc.,
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnFont">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_underline">True</property>
-                    <signal name="clicked" handler="on_btnFont_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">5</property>
-                    <property name="bottom_attach">6</property>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options"/>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel" id="label20">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -2126,6 +2123,23 @@ if not, write to the Free Software Foundation, Inc.,
                     <property name="top_attach">3</property>
                     <property name="bottom_attach">4</property>
                     <property name="x_options">GTK_FILL</property>
+                    <property name="y_options"/>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkFontButton" id="btnFont">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="font">Sans 12</property>
+                    <property name="language">en-us</property>
+                    <property name="preview_text"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
                     <property name="y_options"/>
                   </packing>
                 </child>

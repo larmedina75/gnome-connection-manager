@@ -2650,19 +2650,21 @@ class Wconfig(SimpleGladeApp):
             self.get_widget("chkDefaultColors").set_active(True)
             self.btnFColor.set_sensitive(False)
             self.btnBColor.set_sensitive(False)
-            fcolor="#FFFFFF"
-            bcolor="#000000"
+            fcolor=Gdk.Color.parse("#FFFFFF").color
+            bcolor=Gdk.Color.parse("#000000").color
         else:
             self.get_widget("chkDefaultColors").set_active(False)
             self.btnFColor.set_sensitive(True)
             self.btnBColor.set_sensitive(True)
-            fcolor=conf.FONT_COLOR
-            bcolor=conf.BACK_COLOR            
+            fcolor=Gdk.Color.parse(conf.FONT_COLOR).color
+            bcolor=Gdk.Color.parse(conf.BACK_COLOR).color      
  
-        self.btnFColor.set_color(Gtk.gdk.Color(fcolor))
-        self.btnBColor.set_color(Gtk.gdk.Color(bcolor))
-        self.btnFColor.selected_color=fcolor
-        self.btnBColor.selected_color=bcolor
+        print(fcolor, bcolor)
+
+        self.btnFColor.set_color(fcolor)
+        self.btnBColor.set_color(bcolor)
+        self.btnFColor.color=fcolor
+        self.btnBColor.color=bcolor
         
         #Fuente
         if len(conf.FONT)==0 or conf.FONT == 'monospace':
@@ -2732,7 +2734,7 @@ class Wconfig(SimpleGladeApp):
             obj.set_alignment(0, 0.5)            
             obj.show()
             obj.field=field
-            self.tblGeneral.attach(obj, 0, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)            
+            self.tblGeneral.attach(obj, 0, 2, x, x+1, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0)            
         elif ptype==int:            
             obj = Gtk.SpinButton(climb_rate=10)
             if len(args)==2:
@@ -2745,20 +2747,25 @@ class Wconfig(SimpleGladeApp):
             lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.AttachOptions.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0)
         elif ptype==list:
-            obj = Gtk.combo_box_new_text()
+            #obj = Gtk.combo_box_new_text()
+            #for s in args[0]:
+            #    obj.append_text(s)
+
+            obj = Gtk.ComboBoxText()
             for s in args[0]:
                 obj.append_text(s)
+
             obj.set_active(value)
             obj.show()
             obj.field=field
             lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.AttachOptions.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0)
         else:            
             obj = Gtk.Entry()
             obj.set_text(value)            
@@ -2767,8 +2774,8 @@ class Wconfig(SimpleGladeApp):
             lbl = Gtk.Label(name)
             lbl.set_alignment(0, 0.5)
             lbl.show()
-            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.FILL, 0)
-            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.EXPAND|Gtk.FILL, 0)
+            self.tblGeneral.attach(lbl, 0, 1, x, x+1, Gtk.AttachOptions.FILL, 0)
+            self.tblGeneral.attach(obj, 1, 2, x, x+1, Gtk.AttachOptions.EXPAND|Gtk.AttachOptions.FILL, 0)
         
     def on_edited(self, widget, rownum, value, model, colnum):        
         model[rownum][colnum] = value
@@ -2815,7 +2822,7 @@ class Wconfig(SimpleGladeApp):
             conf.FONT_COLOR = self.btnFColor.selected_color
             conf.BACK_COLOR = self.btnBColor.selected_color
         
-        if self.btnFont.selected_font.to_string() != 'monospace' and not self.chkDefaultFont.get_active():
+        if self.btnFont.get_font_name() != 'monospace' and not self.chkDefaultFont.get_active():
             conf.FONT = self.btnFont.selected_font.to_string()
         else:
             conf.FONT = ''
