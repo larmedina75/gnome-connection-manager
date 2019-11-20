@@ -2,10 +2,10 @@
 
 ![GCM screenshot](screenshot.png)
 
-Tabbed SSH connection manager for GTK+ environments.
+Tabbed SSH connection manager for modern GTK+ environments.
 
 - Gnome Connection Manager is licensed under the GNU General Public License version 3
-- It's designed in Glade and written in python, so it just needs PyGTK to run in any linux environment
+- It's designed in Glade and written in python, so it just needs PyObjects to run in any linux environment
 - Can store passwords for easy access to hosts
 - Supports multiple ssh tunnels for each host
 - Unlimited vertical/horizontal window splitting. You can have as many visible consoles as you want
@@ -19,16 +19,15 @@ Tabbed SSH connection manager for GTK+ environments.
 ## Dependencies
 Make sure you have installed the following packages (Ubuntu):
 
-- python-gtk2 (>= 2.22)
+- python3-gi (>= 3.0)
 - expect
-- python-vte
-- libglade2-0
-- python-glade2
+- libglade2-0 (validate!)
+- python-glade2 (validate!)
 
 On Ubuntu you can install them with the following one-liner:
 
 ```shell
-sudo apt-get install python-gtk2 expect python-vte libglade2-0 python-glade2
+sudo apt-get install python3-gi expect python3-gi-cairo gir1.2-gtk-3.0
 ```
 
 ## Installing
@@ -70,6 +69,5 @@ Categories=GTK;GNOME;Network;
 Replace USERNAME in examples above with your username.
 
 # Note about the author
-The original author of GCM is Renzo Bertuzzi (kuthulu@gmail.com) and all credit goes to him. I really liked the 
-application and decided to fix some bugs and add features that I need in everyday use. If you find my fork of GCM 
-useful and would like to see some new features added don't hesitate to contact me at: matko.jun@gmail.com
+The original author of GCM is Renzo Bertuzzi (kuthulu@gmail.com) and forked from GCM implementation by matko.jun@gmail.com
+This work is the port of GMC to Python3 and PyGObjects (GTK+3, GDK 2.6, Vte 2.91) by Luis Armando Medina Avitia (lamedina@gmail.com)

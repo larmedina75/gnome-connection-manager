@@ -1455,7 +1455,7 @@ if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 or download from this link: 
 https://www.gnu.org/licenses/gpl-3.0.txt</property>
-    <property name="authors">Luis Armando Medina Avitia (lamedina@gmail.com)
+    <property name="authors">Luis Armando Medina Avitia (lamedina@gmail.com) - México
 Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
     <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
     <property name="logo">icon.png</property>

@@ -190,14 +190,6 @@ from gi.repository import Gtk
 from gi.repository import Vte, GLib, Gio, Gdk, GdkPixbuf
 from gi.repository import GObject
 
-#try:
-#    import Vte
-#except:
-#    error = Gtk.MessageDialog (None, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK,
-#      'You must install libVte for python')
-#    error.run()
-#    sys.exit (1)
-
 #Ver si expect esta instalado
 try:
     e = os.system("expect >/dev/null 2>&1 -v")
@@ -555,7 +547,7 @@ class Wmain(SimpleGladeApp):
         checker.start()
             
     def on_terminal_click(self, widget, event, *args):      
-        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
             if conf.PASTE_ON_RIGHT_CLICK:
                 widget.paste_clipboard()
             else:
@@ -1836,7 +1828,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_double_click {
     def on_double_click(self, widget, event, *args):
-        if event.type in [Gtk.gdk._2BUTTON_PRESS, Gtk.gdk._3BUTTON_PRESS] and event.button == 1:
+        if event.type in [Gdk.EventType._2BUTTON_PRESS, Gdk.EventType._3BUTTON_PRESS ] and event.button == 1:
             if isinstance(widget, Gtk.Notebook):
                 pos = event.x + widget.get_allocation().x
                 size = widget.get_tab_label(widget.get_nth_page(widget.get_n_pages()-1)).get_allocation()
@@ -2599,7 +2591,8 @@ class Wabout(SimpleGladeApp):
     def new(self):       
         self.wAbout.set_program_name(app_name)
         self.wAbout.set_version(app_version)
-        self.wAbout.set_website(app_web)    
+        self.wAbout.set_website(app_web)
+        self.wAbout.set_website_label(app_web)  
     #-- Wabout.new }
 
     #-- Wabout custom methods {
@@ -3024,7 +3017,7 @@ class NotebookTabLabel(Gtk.HBox):
         close_image = Gtk.Image.new_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)
         result, image_w, image_h = Gtk.IconSize.lookup(Gtk.IconSize.MENU)
 
-        #self.widget = widget_
+        self.widget_object = widget_
         self.popup  = popup_  
 
         close_btn   = Gtk.Button()
@@ -3061,13 +3054,14 @@ class NotebookTabLabel(Gtk.HBox):
         self.close_tab(widget)
 
     def close_tab(self, widget):
-        notebook = self.widget.get_parent()        
-        page=notebook.page_num(self.widget)
+        notebook = self.get_parent()   
+        page=notebook.page_num(self.widget_object)
+        
         if page >= 0:
             notebook.is_closed = True
             notebook.remove_page(page)
             notebook.is_closed = False       
-            self.widget.destroy()
+            self.widget_object.destroy()
         
     def mark_tab_as_closed(self):
         self.label.set_markup("<span color='darkgray' strikethrough='true'>%s</span>" % (self.label.get_text()))
