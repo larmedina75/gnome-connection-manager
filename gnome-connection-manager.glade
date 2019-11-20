@@ -770,6 +770,15 @@ blanco: por defecto
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkTable" id="table3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -1417,31 +1426,36 @@ Ej: ##D=1000&lt;/span&gt;</property>
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">normal</property>
-    <property name="copyright">by Luis Armando Medina Avitia (lamedina@gmail.com)
+    <property name="copyright">© 2019 by Luis Armando Medina Avitia 
+(lamedina@gmail.com) - México
 
-Based on Gnome Connection Managet 
-by Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
+Based on Gnome Connection Manager
+© 2012 by Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
     <property name="comments">A simple ssh connection manager for gnome ported to python 3</property>
-    <property name="license">This is gnome-connection-manager, written and maintained by
-Renzo Bertuzzi L. &lt;kuthulu@gmail.com&gt;
-Project's Homepage: http://kuthulu.com/gcm
+    <property name="license">This is gnome-connection-manager, written and maintained 
+by Luis Armando Medina Avitia &lt;lamedina@gmail.com&gt;
+
+Based on the work of Renzo Bertuzzi L. &lt;kuthulu@gmail.com&gt;
  
-Copyright © 2012 Renzo Bertuzzi L. &lt;kuthulu@gmail.com&gt; - Chile
+Copyright © 2019 Luis Armando Medina Avitia 
+Copyright © 2012 Renzo Bertuzzi L.
  
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 3, as
+it under the terms of the GNU General Public License version 3, as 
 published by the Free Software Foundation.
  
 This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+but WITHOUT ANY WARRANTY; without even the implied warranty 
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See 
+the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License with
-the Debian GNU/Linux distribution in file /usr/share/common-licenses/GPL-3;
+You should have received a copy of the GNU General Public License 
+with this software in file ./gcm/LICENSE;
 if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.</property>
-    <property name="authors">Luis Armando Medina Avitia (lamedina@gmail.com)
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+or download from this link: 
+https://www.gnu.org/licenses/gpl-3.0.txt</property>
+    <property name="authors">Luis Armando Medina Avitia (lamedina@gmail.com) - México
 Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
     <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
     <property name="logo">icon.png</property>
@@ -1908,6 +1922,24 @@ Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
                 <property name="border_width">4</property>
                 <property name="n_columns">2</property>
                 <property name="column_spacing">5</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -2549,6 +2581,7 @@ Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="on_acerca_de1_activate" swapped="no"/>
                       </object>

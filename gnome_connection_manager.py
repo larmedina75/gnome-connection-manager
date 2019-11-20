@@ -38,9 +38,13 @@
 # - Option to disable shortcuts
 #
 #Changelog:
-# v1.3.1 - 
+# v1.3.1 - About windows ported
+#        - Bug fixed, save font and background colors in config window
+#        - About messages updated
+#        - Config error fixed. Configures Colors not detected.
+#
 # v1.3.0 - Python 3 code rewrite, fix bugs and fist run.
-#        - gi class names rewrite to translate from python2 to python3
+#        - code rewritedto migrate from python2 to python3 ans PyObject 
 #
 # v1.1.0 - Bugfix: public key field was not saved (thanks to Benoît Georgelin for reporting the bug)
 #        - Bugfix: bug in AES library resulted in blank passwords randomly being replaced by some characters (thanks to Boyan Peychev for reporting the bug)
@@ -216,8 +220,8 @@ from gi.repository import Pango as pango
 import pyAES
 
 app_name = "Gnome Connection Manager"
-app_version = "1.3.0"
-app_web = "http://www.kuthulu.com/gcm"
+app_version = "1.3.1"
+app_web = "http://www.comoinstalarlinux.com/software/gcm/"
 app_fileversion = "1"
 
 BASE_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -2593,7 +2597,7 @@ class Wabout(SimpleGladeApp):
         self.wAbout.set_icon_from_file(ICON_PATH)
     #-- Wabout.new {
     def new(self):       
-        self.wAbout.set_name(app_name)
+        self.wAbout.set_program_name(app_name)
         self.wAbout.set_version(app_version)
         self.wAbout.set_website(app_web)    
     #-- Wabout.new }
@@ -2615,15 +2619,14 @@ class Wconfig(SimpleGladeApp):
                  domain=domain_name, **kwargs):
         path = os.path.join(glade_dir, path)
         SimpleGladeApp.__init__(self, path, root, domain, **kwargs)
-        he, wi = self.get_size()
-        print(he, wi)
+
 
     #-- Wconfig.new {
     def new(self):
         #Agregar controles
         self.tblGeneral = self.get_widget("tblGeneral")
-        self.btnFColor = self.get_widget("btnFColor")
-        self.btnBColor = self.get_widget("btnBColor")
+        self.btnFColor = self.get_widget("btnFColor1")
+        self.btnBColor = self.get_widget("btnBColor1")
         self.btnFont = self.get_widget("btnFont")
         self.lblFont = self.get_widget("lblFont")
         self.treeCmd = self.get_widget("treeCommands")
@@ -2646,7 +2649,7 @@ class Wconfig(SimpleGladeApp):
         self.addParam(_(u"Ocultar botón donar"), "conf.HIDE_DONATE", bool)
         
         if len(conf.FONT_COLOR)==0:
-            self.get_widget("chkDefaultColors").set_active(True)
+            self.get_widget("chkDefaultColors1").set_active(True)
             self.btnFColor.set_sensitive(False)
             self.btnBColor.set_sensitive(False)
             fcolor=Gdk.RGBA()
@@ -2654,7 +2657,7 @@ class Wconfig(SimpleGladeApp):
             bcolor=Gdk.RGBA()
             bcolor.parse("#000000")
         else:
-            self.get_widget("chkDefaultColors").set_active(False)
+            self.get_widget("chkDefaultColors1").set_active(False)
             self.btnFColor.set_sensitive(True)
             self.btnBColor.set_sensitive(True)
             fcolor=Gdk.RGBA()
@@ -2820,8 +2823,13 @@ class Wconfig(SimpleGladeApp):
             conf.FONT_COLOR=""
             conf.BACK_COLOR=""
         else:
-            conf.FONT_COLOR = self.btnFColor.get_rgba().to_string()
-            conf.BACK_COLOR = self.btnBColor.get_rgba().to_string()
+            fcolor = self.btnFColor.color
+            bcolor = self.btnBColor.color
+            conf.FONT_COLOR = fcolor.to_string()
+            conf.BACK_COLOR = bcolor.to_string()
+
+
+        print(conf.FONT_COLOR, conf.BACK_COLOR)
 
         if self.btnFont.get_font_name() != 'monospace' and not self.chkDefaultFont.get_active():
             conf.FONT = self.btnFont.selected_font.to_string()
@@ -2855,12 +2863,14 @@ class Wconfig(SimpleGladeApp):
 
     #-- Wconfig.on_btnBColor_clicked {
     def on_btnBColor_clicked(self, widget, *args):
-        widget.selected_color = widget.get_color().to_string()
+        widget.color = widget.get_rgba()
+        print(widget.color, widget.get_rgba())
     #-- Wconfig.on_btnBColor_clicked }
 
     #-- Wconfig.on_btnFColor_clicked {
     def on_btnFColor_clicked(self, widget, *args):
-        widget.selected_color = widget.get_color().to_string()
+        widget.color = widget.get_rgba()
+        print(widget.color, widget.get_rgba())
     #-- Wconfig.on_btnFColor_clicked }
 
     #-- Wconfig.on_chkDefaultColors_toggled {
