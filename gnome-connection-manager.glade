@@ -779,6 +779,9 @@ blanco: por defecto
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkTable" id="table3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -1922,6 +1925,12 @@ Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
                 <property name="border_width">4</property>
                 <property name="n_columns">2</property>
                 <property name="column_spacing">5</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>

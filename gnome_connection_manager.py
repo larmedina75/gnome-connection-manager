@@ -168,9 +168,10 @@ import operator
 import sys
 import base64
 import time
-import tempfile
+#import tempfile
 import shlex
 import traceback
+import webbrowser
 
 #try:
 #    import gtk
@@ -1958,21 +1959,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_btnDonate_clicked {
     def on_btnDonate_clicked(self, widget, *args):
-        with tempfile.NamedTemporaryFile(suffix='.html', delete=False) as f:
-            f.write('<html> \
-                     <body onload="document.forms[0].submit()"> \
-                     <form action="https://www.paypal.com/cgi-bin/webscr" method="post"> \
-                     <input type="hidden" name="cmd" value="_s-xclick"> \
-                     <input type="hidden" name="hosted_button_id" value="10257762"> \
-                     </form> \
-                     </body> \
-                     </html>')
-            
-            if os.name == "nt":
-                os.filestart(f.name)
-            elif os.name == "posix":
-                os.system("/usr/bin/xdg-open %s" % (f.name))
-            
+        webbrowser.open("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=lamedina@gmail.com&lc=US&item_name=Donation+to+Gnome+Connection+Manager+support&no_note=0&cn=&currency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted")            
     #-- Wmain.on_btnDonate_clicked }
     
     #-- Wmain.on_txtSearch_focus {
@@ -2717,6 +2704,7 @@ class Wconfig(SimpleGladeApp):
                 self.treeModel2.append(None, [ s[1], s[0] ])
 
         self.treeModel2.append(None, [ '', '' ])
+        self.get_size ()
     #-- Wconfig.new }
 
     #-- Wconfig custom methods {
