@@ -42,6 +42,7 @@
 #        - Bug fixed, save font and background colors in config window
 #        - About messages updated
 #        - Config error fixed. Configures Colors not detected.
+#        - Donation buton works now with wbebrowser.open function
 #
 # v1.3.0 - Python 3 code rewrite, fix bugs and fist run.
 #        - code rewritedto migrate from python2 to python3 ans PyObject 
@@ -300,7 +301,7 @@ def msgbox(text, parent=None):
                                flags=Gtk.DialogFlags.MODAL, 
                                message_type=Gtk.MessageType.ERROR, 
                                buttons=Gtk.ButtonsType.OK, 
-                               text=text+"dddd")
+                               text=text)
     msgBox.set_icon_from_file(ICON_PATH)
     msgBox.run()    
     msgBox.destroy()
@@ -1407,7 +1408,7 @@ class Wmain(SimpleGladeApp):
             try:
                 host = HostUtils.load_host_from_ini(cp, section)
                 
-                if not groups.has_key(host.group):                    
+                if not host.group in groups:                    
                     groups[host.group]=[]
                 
                 groups[host.group].append( host )
@@ -1476,7 +1477,7 @@ class Wmain(SimpleGladeApp):
             for host in groups[grupo]:
                 self.treeModel.append(group, [host.name, host, iconHost])
                 mnuItem = Gtk.ImageMenuItem(host.name)
-                mnuItem.set_image(Gtk.image_new_from_stock(Gtk.STOCK_NETWORK, Gtk.ICON_SIZE_MENU))
+                mnuItem.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_NETWORK, Gtk.IconSize.MENU))
                 mnuItem.show()
                 mnuItem.connect("activate", lambda arg, nb, h: self.addTab(nb, h), self.nbConsole, host) 
                 menuNode.append(mnuItem)
@@ -2045,7 +2046,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_tvServers_button_press_event {
     def on_tvServers_button_press_event(self, widget, event, *args):
-        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
             x = int(event.x)
             y = int(event.y)            
             pthinfo = self.treeServers.get_path_at_pos(x, y)
@@ -2147,8 +2148,8 @@ class HostUtils:
         compressionLevel = HostUtils.get_val(cp, section, "compression-level", "")
         extra_params = HostUtils.get_val(cp, section, "extra_params", "")
         log = HostUtils.get_val(cp, section, "log", False)
-        backspace_key = int(HostUtils.get_val(cp, section, "backspace-key", int(Vte.ERASE_AUTO)))
-        delete_key = int(HostUtils.get_val(cp, section, "delete-key", int(Vte.ERASE_AUTO)))
+        backspace_key = int(HostUtils.get_val(cp, section, "backspace-key", int(Vte.EraseBinding.AUTO)))
+        delete_key = int(HostUtils.get_val(cp, section, "delete-key", int(Vte.EraseBinding.AUTO)))
         h = Host(group, name, description, host, user, password, private_key, port, tunnel, ctype, commands, keepalive, fcolor, bcolor, x11, agent, compression, compressionLevel,  extra_params, log, backspace_key, delete_key)
         return h
 
@@ -2201,7 +2202,14 @@ class Whost(SimpleGladeApp):
     def new(self):
         global groups
         
-        self.cmbGroup = self.get_widget("cmbGroup")
+        self.cmbGroup = self.get_widget("cmbGroup1")
+        self.cmbGroup.show_all()
+        self.txtGroupName = self.get_widget("txtGroupname")
+
+        
+        #self.cmbGroup.set_entry_text_column(0)
+        print(self.cmbGroup)
+
         self.txtName = self.get_widget("txtName")
         self.txtDescription = self.get_widget("txtDescription")
         self.txtHost = self.get_widget("txtHost")
@@ -2211,7 +2219,7 @@ class Whost(SimpleGladeApp):
         self.txtPrivateKey = self.get_widget("txtPrivateKey")
         self.btnBrowse = self.get_widget("btnBrowse")
         self.txtPort = self.get_widget("txtPort")
-        self.cmbGroup.get_model().clear()
+        #self.cmbGroup1.get_model().clear()
         for group in groups:
             self.cmbGroup.get_model().append([group])
         self.isNew = True
@@ -2224,8 +2232,8 @@ class Whost(SimpleGladeApp):
         self.txtComamnds = self.get_widget("txtCommands")
         self.chkComamnds = self.get_widget("chkCommands")
         buf = self.txtComamnds.get_buffer()
-        buf.create_tag('DELAY1', style=pango.STYLE_ITALIC, foreground='darkgray')
-        buf.create_tag('DELAY2', style=pango.STYLE_ITALIC, foreground='cadetblue')
+        buf.create_tag('DELAY1', style=pango.Style.ITALIC, foreground='darkgray')
+        buf.create_tag('DELAY2', style=pango.Style.ITALIC, foreground='cadetblue')
         buf.connect("changed", self.update_texttags)
         self.chkKeepAlive = self.get_widget("chkKeepAlive")
         self.txtKeepAlive = self.get_widget("txtKeepAlive")
@@ -2242,6 +2250,7 @@ class Whost(SimpleGladeApp):
         self.cmbType.set_active(0)
         self.cmbBackspace.set_active(0)
         self.cmbDelete.set_active(0)
+
     #-- Whost.new }
 
     #-- Whost custom methods {
@@ -2344,18 +2353,28 @@ class Whost(SimpleGladeApp):
 
     #-- Whost.on_okbutton1_clicked {
     def on_okbutton1_clicked(self, widget, *args):
-        group = self.cmbGroup.get_active_text().strip()
-        name = self.txtName.get_text().strip()
+        tree_iter = self.cmbType.get_active_iter()
+        name=''
+        if tree_iter is not None:
+            model = self.cmbType.get_model()
+            print(model[tree_iter][:2])
+            name = model[tree_iter][:2]
+        else:
+            entry = self.cmbType.get_child()
+            name = entry.get_text()
+
+        group       = self.txtGroupname.get_text()
+        name        = self.txtName.get_text().strip()
         description = self.txtDescription.get_text().strip()
-        host = self.txtHost.get_text().strip()
-        ctype = self.cmbType.get_active_text().strip()
-        user = self.txtUser.get_text().strip()
-        password = self.txtPass.get_text().strip()
+        host        = str(self.txtHost.get_text()).strip()
+        ctype       = name[0]
+        user        = self.txtUser.get_text().strip()
+        password    = self.txtPass.get_text().strip()
         private_key = self.txtPrivateKey.get_text().strip()
-        port = self.txtPort.get_text().strip()
-        buf = self.txtCommands.get_buffer()
-        commands = buf.get_text(buf.get_start_iter(), buf.get_end_iter()).strip() if self.chkCommands.get_active() else ""
-        keepalive = self.txtKeepAlive.get_text().strip()
+        port        = self.txtPort.get_text().strip()
+        buf         = self.txtCommands.get_buffer()
+        commands    = buf.get_text(buf.get_start_iter(), buf.get_end_iter()).strip() if self.chkCommands.get_active() else ""
+        keepalive   = self.txtKeepAlive.get_text().strip()
         if self.get_widget("chkDefaultColors").get_active():
             fcolor=""
             bcolor=""
@@ -2394,7 +2413,7 @@ class Whost(SimpleGladeApp):
                     
         try:
             #Guardar                
-            if not groups.has_key(group):
+            if not group in groups:
                 groups[group]=[]   
             
             if self.isNew:
@@ -2448,15 +2467,26 @@ class Whost(SimpleGladeApp):
 
     #-- Whost.on_cmbType_changed {
     def on_cmbType_changed(self, widget, *args):
-        is_local = widget.get_active_text()=="local"
+        tree_iter = widget.get_active_iter()
+        name=''
+        if tree_iter is not None:
+            model = widget.get_model()
+            print(model[tree_iter][:2])
+            name = model[tree_iter][:2]
+        else:
+            entry = widget.get_child()
+            name = entry.get_text()
+ 
+        is_local = name[0]=="local"
         self.txtUser.set_sensitive(not is_local)
         self.txtPassword.set_sensitive(not is_local)
         self.txtPort.set_sensitive(not is_local)
         self.txtHost.set_sensitive(not is_local)
         self.txtExtraParams.set_sensitive(not is_local)
         
-        if widget.get_active_text()=="ssh":
-            self.get_widget("table2").show_all()
+        if name[0]=="ssh":
+            table2 = self.get_widget("table2")
+            table2.show_all()
             self.txtKeepAlive.set_sensitive(True)
             self.chkKeepAlive.set_sensitive(True)
             self.chkX11.set_sensitive(True)
@@ -2467,7 +2497,8 @@ class Whost(SimpleGladeApp):
             self.btnBrowse.set_sensitive(True)
             port = "22"
         else:
-            self.get_widget("table2").hide_all()
+            table2 = self.get_widget("table2")
+            table2.hide()
             self.txtKeepAlive.set_text('0')
             self.txtKeepAlive.set_sensitive(False)
             self.chkKeepAlive.set_sensitive(False)

@@ -712,9 +712,21 @@ blanco: por defecto
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="cmbGroup">
+                  <object class="GtkComboBoxText" id="cmbGroup1">
+                    <property name="name">cmbGroup1</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="has_focus">True</property>
+                    <property name="has_entry">True</property>
+                    <child internal-child="entry">
+                      <object class="GtkEntry" id="txtGroupname">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="has_focus">True</property>
+                        <property name="activates_default">True</property>
+                        <property name="text" translatable="yes">New Group</property>
+                      </object>
+                    </child>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -742,6 +754,9 @@ blanco: por defecto
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="n_rows">2</property>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -1922,6 +1937,12 @@ Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
                 <property name="border_width">4</property>
                 <property name="n_columns">2</property>
                 <property name="column_spacing">5</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
