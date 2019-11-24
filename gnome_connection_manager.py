@@ -5,8 +5,8 @@
 # 
 # Simple Connection Manager by Luis Armando Medina Avitia (lamedina@gmail.com)
 #
-# based on Gnome Connection Manager by Renzo Bertuzzi (kuthulu@gmail.com) - CHILE
-# Last change: 20191119
+# based on Gnome Connection Manager (2012) by Renzo Bertuzzi (kuthulu@gmail.com) - CHILE
+# Last change: 20191122
 #
 #
 #TODO
@@ -43,6 +43,8 @@
 #        - About messages updated
 #        - Config error fixed. Configures Colors not detected.
 #        - Donation buton works now with wbebrowser.open function
+#        - new host, save hosts in config and reload on start
+#        - replaces pyAES by pycrypto to manage encryption
 #
 # v1.3.0 - Python 3 code rewrite, fix bugs and fist run.
 #        - code rewritedto migrate from python2 to python3 ans PyObject 
@@ -169,25 +171,14 @@ import operator
 import sys
 import base64
 import time
-#import tempfile
 import shlex
 import traceback
 import webbrowser
-
-#try:
-#    import gtk
-#    import GObject
-#except:
-#    #print >> sys.stderr, "pygtk required"
-#    print("pygtk required", file=sys.stderr)
-#    sys.exit(1)
-
-#import gtk
-#import GObject
   
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
+
 from gi.repository import Gtk
 from gi.repository import Vte, GLib, Gio, Gdk, GdkPixbuf
 from gi.repository import GObject
@@ -210,8 +201,14 @@ from SimpleGladeApp import bindtextdomain
 
 import configparser
 from gi.repository import Pango as pango
-#import pango
-import pyAES
+import hashlib
+
+try:
+    from Crypto.Cipher import AES
+except:
+    print >> sys.stderr, "pycrypto >= 2.6.1 required"
+    print("pycrypto >= 2.6.1 required", file=sys.stderr)
+    sys.exit(1)
 
 app_name = "Gnome Connection Manager"
 app_version = "1.3.1"
@@ -373,13 +370,14 @@ def get_key_name(event):
         name = name + "ALT+"
     if event.state & 67108864:
         name = name + "SUPER+"
-    return name + Gtk.gdk.keyval_name(event.keyval).upper()
+    return name + Gdk.keyval_name(event.keyval).upper()
      
 def get_username():
     return os.getenv('USER') or os.getenv('LOGNAME') or os.getenv('USERNAME')
 
 def get_password():
-    return get_username() + enc_passwd
+    #return get_username() + enc_passwd
+    return enc_passwd
     
 def load_encryption_key():
     global enc_passwd
@@ -396,58 +394,66 @@ def load_encryption_key():
 def initialise_encyption_key():
     global enc_passwd
     import random
-    x = int(str(random.random())[2:])
-    y = int(str(random.random())[2:])
-    enc_passwd = "%x" % (x*y)
+    x0 = int(str(random.random())[2:])
+    y0 = int(str(random.random())[2:])
+    x1 = int(str(random.random())[2:])
+    y1 = int(str(random.random())[2:])
+    p1 = "%x" % (x0*y0)
+    p2 = "%x" % (x1*y1)
+    enc_passwd = (p1+p2)[0:32]
     try:
         with os.fdopen(os.open(KEY_FILE, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as f:
             f.write(enc_passwd)
     except:
         msgbox("Error initialising key_file")
 
-## funciones para encryptar passwords - no son muy seguras, pero impiden que los pass se guarden en texto plano
-def xor(pw, str1):
-    c = 0
-    liste = []
-    for k in xrange(len(str1)):
-        if c > len(pw)-1:
-            c = 0
-        fi = ord(pw[c])
-        c += 1
-        se = ord(str1[k])
-        fin = operator.xor(fi, se)
-        liste += [chr(fin)]
-    return liste
+# ## funciones para encryptar passwords - no son muy seguras, pero impiden que los pass se guarden en texto plano
+# def xor(pw, str1):
+#     c = 0
+#     liste = []
+#     for k in xrange(len(str1)):
+#         if c > len(pw)-1:
+#             c = 0
+#         fi = ord(pw[c])
+#         c += 1
+#         se = ord(str1[k])
+#         fin = operator.xor(fi, se)
+#         liste += [chr(fin)]
+#     return liste
         
-def encrypt_old(passw, string):
-    try:
-        ret = xor(passw, string)    
-        s = base64.b64encode("".join(ret))
-    except:
-        s = ""
-    return s
+# def encrypt_old(passw, string):
+#     try:
+#         ret = xor(passw, string)    
+#         s = base64.b64encode("".join(ret))
+#     except:
+#         s = ""
+#     return s
  
-def decrypt_old(passw, string):
-    try:
-        ret = xor(passw, base64.b64decode(string))
-        s = "".join(ret)
-    except:
-        s = ""
-    return s
+# def decrypt_old(passw, string):
+#     try:
+#         ret = xor(passw, base64.b64decode(string))
+#         s = "".join(ret)
+#     except:
+#         s = ""
+#     return s
     
-def encrypt(passw, string):
-    try:
-        s = pyAES.encrypt(string, passw)
-    except:
-        s = ""
-    return s
+# def encrypt(passw, string):
+#     try:
+#         print(passw, string)
+#         s = pyAES.encrypt(string, passw)
+#     except Exception as e:
+#         msgbox("%s\n%s" % (_("Error al encriptar el password"), str(e)+traceback.format_exc()))
+#         s = ""
+#     return s
  
-def decrypt(passw, string):
-    try:
-        s = decrypt_old(passw, string) if conf.VERSION == 0 else pyAES.decrypt(string, passw)
-    except:
-        s = ""
-    return s
+# def decrypt(passw, string):
+#     try:
+#         s = decrypt_old(passw, string) if conf.VERSION == 0 else pyAES.decrypt(string, passw)
+#     except Exception as e:
+#         print("type error: " + str(e))
+#         print(traceback.format_exc())
+#         s = ""
+#     return s
 
 class Wmain(SimpleGladeApp):
 
@@ -560,7 +566,7 @@ class Wmain(SimpleGladeApp):
             return True
     
     def on_terminal_keypress(self, widget, event, *args):
-        if shortcuts.has_key    (get_key_name(event)):
+        if get_key_name(event) in shortcuts.has_key :
             cmd = shortcuts[get_key_name(event)]
             if type(cmd) == list:
                 #comandos predefinidos
@@ -599,7 +605,7 @@ class Wmain(SimpleGladeApp):
                     else:
                         widget.fork_command(widget.command[0], widget.command[1])
                         while Gtk.events_pending():
-                            Gtk.main_iteration(False)                                
+                            Gtk.main_iteration()                                
                             
                         #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                         if widget.command[2]!=None and widget.command[2]!='':
@@ -741,7 +747,7 @@ class Wmain(SimpleGladeApp):
             else:
                 term.fork_command(term.command[0], term.command[1])
                 while Gtk.events_pending():
-                    Gtk.main_iteration(False)                                
+                    Gtk.main_iteration()                                
                     
                 #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                 if term.command[2]!=None and term.command[2]!='':
@@ -1166,14 +1172,15 @@ class Wmain(SimpleGladeApp):
             else:
                 cmd = SSH_COMMAND
                 password = host.password
+                print("tipo:", host.type)
                 if host.type == 'ssh':
                     if len(host.user)==0:
                         host.user = get_username()
                     if host.password == '':
                         cmd = SSH_BIN
-                        args = [ SSH_BIN, '-l', host.user, '-p', host.port]
+                        args = [ "/usr/bin/ssh", '-l', host.user, '-p', host.port]
                     else:
-                        args = [SSH_COMMAND, host.type, '-l', host.user, '-p', host.port]                                       
+                        args = [SSH_COMMAND, host.type, '-l', host.user, '-p', host.port]  
                     if host.keep_alive!='0' and host.keep_alive!='':
                         args.append('-o')
                         args.append('ServerAliveInterval=%s' % (host.keep_alive))
@@ -1210,10 +1217,32 @@ class Wmain(SimpleGladeApp):
                     if host.extra_params != None and host.extra_params != '':
                         args += shlex.split(host.extra_params)
                     args += [host.host, host.port]
-                v.command = (cmd, args, password)
-                v.fork_command(cmd, args)
+
+
+                # spawn_async(pty_flags, 
+                #              working_directory, 
+                #              argv, 
+                #              envv, 
+                #              spawn_flags_, 
+                #              child_setup, 
+                #              timeout, 
+                #              cancellable, 
+                #              callback, 
+                #              *user_data)
+
+                print(cmd, args)
+
+                v.spawn_sync(Vte.PtyFlags.DEFAULT,
+                              os.environ['HOME'],
+                              args,
+                              [],
+                              GLib.SpawnFlags.DO_NOT_REAP_CHILD,
+                              None,
+                              None, 
+                             )  
+
                 while Gtk.events_pending():
-                    Gtk.main_iteration(False)                                
+                    Gtk.main_iteration()                                
                 
                 #esperar 2 seg antes de enviar el pass para dar tiempo a que se levante expect y prevenir que se muestre el pass
                 if password!=None and password!='':
@@ -1242,7 +1271,9 @@ class Wmain(SimpleGladeApp):
             msgbox("%s: %s : %s" % (_("Error al conectar con servidor"), sys.exc_info()[1], tace_text))
             
     def send_data(self, terminal, data):
-        terminal.feed_child('%s\r' % (data))        
+        print(data)
+        sdata = '%s\r' % (data)
+        terminal.feed_child(sdata.encode("utf-8"))        
         return False
         
     def initLeftPane(self):
@@ -1413,7 +1444,7 @@ class Wmain(SimpleGladeApp):
                 
                 groups[host.group].append( host )
             except:                
-                print("{}: {}".format( (_("Entrada invalida en archivo de configuracion"), sys.exc_info()[1]) ))
+                print("{}: {}".format((_("Entrada invalida en archivo de configuracion")), sys.exc_info()[1] ) )
 
     def is_node_collapsed(self, model, path, iter, nodes):
         if self.treeModel.get_value(iter, 1)==None and not self.treeServers.row_expanded(path):
@@ -2031,7 +2062,7 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_hpMain_button_press_event {
     def on_hpMain_button_press_event(self, widget, event, *args):        
-        if event.type in [Gtk.gdk._2BUTTON_PRESS]:            
+        if event.type in [Gdk.EventType._2BUTTON_PRESS]:            
             p = self.hpMain.get_position()
             self.set_panel_visible(p==0) 
     #-- Wmain.on_hpMain_button_press_event }
@@ -2068,7 +2099,7 @@ class Wmain(SimpleGladeApp):
                 self.popupMenuFolder.mnuDel.show()
                 self.treeServers.grab_focus()
                 self.treeServers.set_cursor( path, col, 0)
-            self.popupMenuFolder.popup( None, None, None, event.button, event.time)
+            self.popupMenuFolder.popup( None, None, None, None, event.button, event.time)
             return True
     #-- Wmain.on_tvServers_button_press_event }
 
@@ -2128,11 +2159,25 @@ class HostUtils:
     def load_host_from_ini(cp, section, pwd=''):
         if pwd=='':
             pwd = get_password()
+
         group = cp.get(section, "group")
         name = cp.get(section, "name")
         host = cp.get(section, "host")
         user = cp.get(section, "user")
-        password = decrypt(pwd, cp.get(section, "pass"))
+
+        sha256 = hashlib.sha256()
+        sha256.update(pwd.encode('utf-8'))
+        iv = str(sha256.hexdigest()[0:16])
+        print("pwd:", pwd, iv )
+
+        obj2 = AES.new(pwd, AES.MODE_CBC, iv )
+        ciphertext = bytes.fromhex(cp.get(section, "pass"))
+        print("cyphered:", ciphertext )
+        deciphertext = obj2.decrypt(ciphertext)
+        dpassword = deciphertext.decode()
+        password = dpassword.lstrip()
+        print("password:", password )
+
         description = HostUtils.get_val(cp, section, "description", "")
         private_key = HostUtils.get_val(cp, section, "private_key", "")
         port = HostUtils.get_val(cp, section, "port", "22")
@@ -2150,6 +2195,7 @@ class HostUtils:
         log = HostUtils.get_val(cp, section, "log", False)
         backspace_key = int(HostUtils.get_val(cp, section, "backspace-key", int(Vte.EraseBinding.AUTO)))
         delete_key = int(HostUtils.get_val(cp, section, "delete-key", int(Vte.EraseBinding.AUTO)))
+
         h = Host(group, name, description, host, user, password, private_key, port, tunnel, ctype, commands, keepalive, fcolor, bcolor, x11, agent, compression, compressionLevel,  extra_params, log, backspace_key, delete_key)
         return h
 
@@ -2157,12 +2203,34 @@ class HostUtils:
     def save_host_to_ini(cp, section, host, pwd=''):
         if pwd=='':
             pwd = get_password()
+        
+        sha256 = hashlib.sha256()
+        sha256.update(pwd.encode('utf-8'))
+        iv = str(sha256.hexdigest()[0:16])
+        print("pwd:", pwd, iv )
+
         cp.set(section, "group", host.group)
         cp.set(section, "name", host.name)
         cp.set(section, "description", host.description)
         cp.set(section, "host", host.host)
         cp.set(section, "user", host.user)
-        cp.set(section, "pass", encrypt(pwd, host.password))
+        #cp.set(section, "pass", encrypt(pwd.encode('utf-8'), host.password.encode('utf-8')))
+        
+        obj = AES.new(pwd, AES.MODE_CBC, iv )
+        lendif = len(host.password) % 16
+        fillsp = 16 - lendif
+        print("text: '",host.password+(' '*fillsp), "'")
+        ciphertext = obj.encrypt(host.password+(' '*fillsp))
+        print(ciphertext)
+
+        obj2 = AES.new(pwd, AES.MODE_CBC, iv )
+        deciphertext = obj2.decrypt(ciphertext)
+        password = deciphertext.decode()
+
+        print("password: '", password.rstrip(), "'")
+
+        cp.set(section, "pass", ciphertext.hex() )
+
         cp.set(section, "private_key", host.private_key)
         cp.set(section, "port", host.port)
         cp.set(section, "tunnel", host.tunnel_as_string())
@@ -2221,7 +2289,8 @@ class Whost(SimpleGladeApp):
         self.txtPort = self.get_widget("txtPort")
         #self.cmbGroup1.get_model().clear()
         for group in groups:
-            self.cmbGroup.get_model().append([group])
+            print(group)
+            self.cmbGroup.append_text(group)
         self.isNew = True
         
         self.chkDynamic = self.get_widget("chkDynamic")
@@ -2296,27 +2365,31 @@ class Whost(SimpleGladeApp):
             self.get_widget("chkDefaultColors").set_active(False)
             self.btnFColor.set_sensitive(True)
             self.btnBColor.set_sensitive(True)
-            fcolor=host.font_color
-            bcolor=host.back_color
+            fcolor=Gdk.RGBA()
+            fcolor.parse(host.font_color)
+            bcolor=Gdk.RGBA()
+            bcolor.parse(back_color)
         else:
             self.get_widget("chkDefaultColors").set_active(True)
             self.btnFColor.set_sensitive(False)
             self.btnBColor.set_sensitive(False)
-            fcolor="#FFFFFF"
-            bcolor="#000000"
+            fcolor=Gdk.RGBA()
+            fcolor.parse("#FFFFFF")
+            bcolor=Gdk.RGBA()
+            bcolor.parse("#000000")
  
-        self.btnFColor.set_color(Gtk.gdk.Color(fcolor))
-        self.btnBColor.set_color(Gtk.gdk.Color(bcolor))
+        self.btnFColor.set_rgba(fcolor)
+        self.btnBColor.set_rgba(bcolor)
         
-        m = self.btnFColor.get_colormap() 
-        color = m.alloc_color("red")
-        style = self.btnFColor.get_style().copy()
-        style.bg[Gtk.STATE_NORMAL] = color
-        self.btnFColor.set_style(style)
-        self.btnFColor.queue_draw()
+        #m = self.btnFColor.get_colormap() 
+        #color = m.alloc_color("red")
+        #style = self.btnFColor.get_style().copy()
+        #style.bg[Gtk.STATE_NORMAL] = color
+        #self.btnFColor.set_style(style)
+        #self.btnFColor.queue_draw()
         
-        self.btnFColor.selected_color=fcolor
-        self.btnBColor.selected_color=bcolor
+        #self.btnFColor.selected_color=fcolor
+        #self.btnBColor.selected_color=bcolor
         self.chkX11.set_active(host.x11)   
         self.chkAgent.set_active(host.agent)
         self.chkCompression.set_active(host.compression)
@@ -2354,20 +2427,19 @@ class Whost(SimpleGladeApp):
     #-- Whost.on_okbutton1_clicked {
     def on_okbutton1_clicked(self, widget, *args):
         tree_iter = self.cmbType.get_active_iter()
-        name=''
+        type_name=''
         if tree_iter is not None:
             model = self.cmbType.get_model()
-            print(model[tree_iter][:2])
-            name = model[tree_iter][:2]
+            type_name = model[tree_iter][:2]
         else:
             entry = self.cmbType.get_child()
-            name = entry.get_text()
+            type_name = entry.get_text()
 
         group       = self.txtGroupname.get_text()
         name        = self.txtName.get_text().strip()
         description = self.txtDescription.get_text().strip()
         host        = str(self.txtHost.get_text()).strip()
-        ctype       = name[0]
+        ctype       = type_name[0]
         user        = self.txtUser.get_text().strip()
         password    = self.txtPass.get_text().strip()
         private_key = self.txtPrivateKey.get_text().strip()
@@ -2678,8 +2750,6 @@ class Wconfig(SimpleGladeApp):
 
         self.btnFColor.set_rgba(fcolor)
         self.btnBColor.set_rgba(bcolor)
-        #self.btnFColor.color=fcolor
-        #self.btnBColor.color=bcolor
         
         #Fuente
         if len(conf.FONT)==0 or conf.FONT == 'monospace':
@@ -2840,8 +2910,7 @@ class Wconfig(SimpleGladeApp):
             conf.FONT_COLOR = fcolor.to_string()
             conf.BACK_COLOR = bcolor.to_string()
 
-
-        print(conf.FONT_COLOR, conf.BACK_COLOR)
+        #print(conf.FONT_COLOR, conf.BACK_COLOR)
 
         if self.btnFont.get_font_name() != 'monospace' and not self.chkDefaultFont.get_active():
             conf.FONT = self.btnFont.selected_font.to_string()
