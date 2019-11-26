@@ -1621,18 +1621,20 @@ class Wmain(SimpleGladeApp):
             #Crear un hpaned, en el hijo 0 dejar el notebook y en el hijo 1 el nuevo notebook
             #El nuevo hpaned dejarlo como hijo del actual parent
             hp = Gtk.HPaned() if direction==HSPLIT else Gtk.VPaned()
+
             nb = Gtk.Notebook()
-            nb.set_group_id(11)
+            nb.set_group_name()
             nb.connect('button_press_event', self.on_double_click, None)
             nb.connect('page_removed', self.on_page_removed)
             nb.connect("page-added", self.on_page_added)
             nb.set_property("scrollable", True)
+            
             cp  = cnb.get_parent()
 
             if direction==HSPLIT:
-                cnb.set_size_request(cnb.allocation.width/2, cnb.allocation.height)
+                cnb.set_size_request(cnb.get_allocated_width()/2, cnb.get_allocated_height())
             else:                
-                cnb.set_size_request(cnb.allocation.width, cnb.allocation.height/2)
+                cnb.set_size_request(cnb.get_allocated_width(), cnb.get_allocated_height()/2)
             #cnb.set_size_request(cnb.allocation.width/2, cnb.allocation.height/2)
             
             cp.remove(cnb)
@@ -1642,6 +1644,7 @@ class Wmain(SimpleGladeApp):
             text = cnb.get_tab_label(csp).get_text()
             
             csp.reparent(nb)
+
             csp = nb.get_nth_page(0)
                         
             tab = NotebookTabLabel(text, nb, csp, self.popupMenuTab)
@@ -3186,7 +3189,7 @@ class NotebookTabLabel(Gtk.HBox):
         return self.label.get_text()
 
     def popupmenu(self, widget, event, label):
-        if event.type == Gtk.gdk.BUTTON_PRESS and event.button == 3:    
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:    
             self.popup.label = self.label
             if self.is_active:
                 self.popup.mnuReopen.hide()
@@ -3197,7 +3200,7 @@ class NotebookTabLabel(Gtk.HBox):
             self.popup.mnuLog.set_active( hasattr(self.widget.get_child(), "log_handler_id") and self.widget.get_child().log_handler_id != 0 )
             self.popup.popup( None, None, None, event.button, event.time)
             return True
-        elif event.type == Gtk.gdk.BUTTON_PRESS and event.button == 2:    
+        elif event.type == Gdk.EventType.BUTTON_PRESS and event.button == 2:    
             self.close_tab(self.widget)
 
 class EntryDialog( Gtk.Dialog):
