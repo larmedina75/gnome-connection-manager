@@ -3188,7 +3188,7 @@ class CheckUpdates(Thread):
         self.parent = p
         
     def msg(self, text, parent):        
-        self.msgBox = Gtk.MessageDialog(parent, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK, text)
+        self.msgBox = Gtk.MessageDialog(parent, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.ButtonsType.OK, text)
         self.msgBox.set_icon_from_file(ICON_PATH)
         self.msgBox.connect('response', self.on_clicked)
         self.msgBox.show_all()      
@@ -3201,11 +3201,11 @@ class CheckUpdates(Thread):
         try:
             import urllib, socket        
             socket.setdefaulttimeout(5)
-            web = urllib.urlopen('http://kuthulu.com/gcm/_current.html')
+            web = urllib.urlopen('http://comoinstalarlinux.com/gcm_current.html')
             if web.getcode()==200:
                 new_version = web.readline().strip()
                 if len(new_version)>0 and new_version != app_version:                                
-                    self.tag = GObject.timeout_add(0, self.msg, "%s\n\nVERSION: %s" % (_("Hay una nueva version disponible en http://kuthulu.com/gcm/?module=download"), new_version), self.parent.get_widget("wMain"))
+                    self.tag = GObject.timeout_add(0, self.msg, "%s\n\nVERSION: %s" % (_("Hay una nueva version disponible en http://comoinstalarlinux.com/gcm/"), new_version), self.parent.get_widget("wMain"))
         except:            
             pass
 

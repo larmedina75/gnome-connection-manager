@@ -12,9 +12,11 @@
 #        - Ctrl+Q terminate application
 #        - Ctrl+N create a new local terminal
 #        - Hor. and Ver. Notebook split
+#        - Added tooltip to tabs when a user,ip, and port exist
+#        - Rusian lang fix from alternate fork 
 #
-# v1.3.0 - Python 3 code rewrite, fix bugs and fist run.
-#        - code rewritedto migrate from python2 to python3 ans PyObject 
+# v1.3.0 - Python 3 code and GTK3 quick rewrite, fix bugs and fist run.
+#        - code rewrite to migrate from python2 to python3 ans PyGObject gi
 #
 # v1.1.0 - Bugfix: public key field was not saved (thanks to Benoît Georgelin for reporting the bug)
 #        - Bugfix: bug in AES library resulted in blank passwords randomly being replaced by some characters (thanks to Boyan Peychev for reporting the bug)

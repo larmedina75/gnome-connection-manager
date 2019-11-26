@@ -345,3 +345,75 @@ class SimpleGladeApp():
 
     def get_widgets(self):
         return self.builder.get_objects()
+
+    def on_wAbout_close(self):
+        pass
+
+    def on_cancelbutton1_clicked(self):
+        pass
+
+    def on_okbutton1_clicked(self):
+        pass
+
+    def on_btnFColor_clicked(self):
+        pass
+        
+    def on_chkDefaultColors_toggled(self):
+        pass
+        
+    def on_btnBColor_clicked(self):
+        pass
+        
+    def on_chkCommands_toggled(self):
+        pass
+        
+    def on_chkDynamic_toggled(self):
+        pass
+        
+    def on_chkCompression_toggled(self):
+        pass
+        
+    def on_chkKeepAlive_toggled(self):
+        pass
+        
+    def on_cmbType_changed(self):
+        pass
+        
+    def on_btnBrowse_clicked(self):
+        pass
+
+    def on_treeCommands_key_press_event(self):
+        pass
+        
+    def on_treeCommands_key_press_event(self):
+        pass
+        
+    def on_chkDefaultFont_toggled(self):
+        pass
+        
+    def on_chkDefaultColors_toggled(self):
+        pass
+        
+    def on_btnFColor_clicked(self):
+        pass
+        
+    def on_btnBColor_clicked(self):
+        pass
+        
+    def on_wCluster_destroy(self):
+        pass
+        
+    def on_txtCommands_key_press_event(self):
+        pass
+        
+    def on_btnInvert_clicked(self):
+        pass
+        
+    def on_btnNone_clicked(self):
+        pass
+        
+    def on_btnAll_clicked(self):
+        pass
+        
+    def on_cancelbutton2_clicked(self):
+        pass

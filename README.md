@@ -5,8 +5,8 @@
 Tabbed SSH connection manager for modern GTK+ environments.
 
 - Gnome Connection Manager is licensed under the GNU General Public License version 3
-- It's designed in Glade and written in python, so it just needs PyObjects to run in any linux environment
-- Can store passwords for easy access to hosts
+- It's designed in Glade and written in python 3, so it just needs PyGObjects to run in any linux environment
+- Can store passwords securely for easy access to hosts
 - Supports multiple ssh tunnels for each host
 - Unlimited vertical/horizontal window splitting. You can have as many visible consoles as you want
 - Drag&Drop tabs between consoles
@@ -30,8 +30,13 @@ sudo apt-get install python3-gi python3-crypto expect python3-gi-cairo gir1.2-gt
 ```
 
 ## Installing
-Once you have dependencies installed, it's as simple as placing gnome-connection-manager directory to a location of
-your choice and typing in shell:
+Once you have dependencies installed, you need to clone this repository. Locate a directory where you wanto to install Gnome Connection Manager and run this command on the terminal:
+
+```shell
+git clone https://github.com/larmedina75/gnome-connection-manager.git
+```
+
+Go to the gnome-connection-manager directory and type this command in shell:
 
 ```shell
 python gnome_connection_manager.py
