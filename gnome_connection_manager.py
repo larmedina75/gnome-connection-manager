@@ -45,6 +45,8 @@
 #        - Donation buton works now with wbebrowser.open function
 #        - new host, save hosts in config and reload on start
 #        - replaces pyAES by pycrypto to manage encryption
+#        - Copy, Paste, Copy and Paste, Select All  and Copy All Menus works
+#        - Copy address ready
 #
 # v1.3.0 - Python 3 code rewrite, fix bugs and fist run.
 #        - code rewritedto migrate from python2 to python3 ans PyObject 
@@ -63,6 +65,7 @@
 #        - Se usa la consola por defecto del usuario en vez de bash
 #        - Se exponen algunos shortcuts
 #        - Added menu with servers list
+#        - Ctrl+q terminate application
 #
 # v1.0.0 - Bugfix: last group was collapsed when adding/editing a new host. All collapsed nodes are preserved now. (thanks to Kevin Brennan for reporting the bug)
 #        - Bugfix: importing servers in another computer cleared all the passwords. (thanks to Simon Pitt for reporting the bug)
@@ -233,6 +236,7 @@ domain_name="gcm-lang"
 HSPLIT = 0
 VSPLIT = 1
 
+_QUIT              = ["quit"]
 _COPY              = ["copy"]
 _PASTE             = ["paste"]
 _COPY_ALL          = ["copy_all"]
@@ -270,28 +274,28 @@ enc_passwd=''
 
 #Variables de configuracion
 class conf():
-    WORD_SEPARATORS="-A-Za-z0-9,./?%&#:_=+@~"
-    BUFFER_LINES=2000
-    STARTUP_LOCAL=True
-    CONFIRM_ON_EXIT=True
-    FONT_COLOR = ""
-    BACK_COLOR = ""
-    TRANSPARENCY = 0
+    WORD_SEPARATORS      = "-A-Za-z0-9,./?%&#:_=+@~"
+    BUFFER_LINES         = 2000
+    STARTUP_LOCAL        = True
+    CONFIRM_ON_EXIT      = True
+    FONT_COLOR           = ""
+    BACK_COLOR           = ""
+    TRANSPARENCY         = 0
     PASTE_ON_RIGHT_CLICK = 1
     CONFIRM_ON_CLOSE_TAB = 0
-    AUTO_CLOSE_TAB = 0
-    COLLAPSED_FOLDERS = ""
-    LEFT_PANEL_WIDTH = 100
-    CHECK_UPDATES=True
-    WINDOW_WIDTH = -1
-    WINDOW_HEIGHT = -1
-    FONT = ""
-    HIDE_DONATE = False
-    AUTO_COPY_SELECTION = 0
-    LOG_PATH = os.path.expanduser("~")
-    SHOW_TOOLBAR = True
-    SHOW_PANEL = True
-    VERSION = 0
+    AUTO_CLOSE_TAB       = 0
+    COLLAPSED_FOLDERS    = ""
+    LEFT_PANEL_WIDTH     = 100
+    CHECK_UPDATES        = True
+    WINDOW_WIDTH         = -1
+    WINDOW_HEIGHT        = -1
+    FONT                 = ""
+    HIDE_DONATE          = False
+    AUTO_COPY_SELECTION  = 0
+    LOG_PATH             = os.path.expanduser("~")
+    SHOW_TOOLBAR         = True
+    SHOW_PANEL           = True
+    VERSION              = 0
 
 def msgbox(text, parent=None):
     msgBox = Gtk.MessageDialog(parent=parent, 
@@ -535,6 +539,10 @@ class Wmain(SimpleGladeApp):
         if conf.STARTUP_LOCAL:
             self.addTab(self.nbConsole,'local')
 
+        # Code for other initialization actions should be added here.
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
+
         
     #-- Wmain.new {
     def new(self):        
@@ -566,11 +574,13 @@ class Wmain(SimpleGladeApp):
             return True
     
     def on_terminal_keypress(self, widget, event, *args):
-        if get_key_name(event) in shortcuts.has_key :
+        if get_key_name(event) in shortcuts :
             cmd = shortcuts[get_key_name(event)]
             if type(cmd) == list:
                 #comandos predefinidos
-                if cmd == _COPY:
+                if cmd == _QUIT:
+                    self.terminal_copy(widget)
+                elif cmd == _COPY:
                     self.terminal_copy(widget)
                 elif cmd == _PASTE:
                     self.terminal_paste(widget)
@@ -698,10 +708,11 @@ class Wmain(SimpleGladeApp):
             return True
         elif item == 'H': #COPY HOST ADDRESS TO CLIPBOARD
             if self.treeServers.get_selection().get_selected()[1]!=None and not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):
-                host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)                
-                cb = Gtk.Clipboard()
-                cb.set_text(host.host)
-                cb.store()
+                host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)
+                text = str(host.host)
+                print(text)              
+                self.clipboard.set_text( text , -1)
+                self.clipboard.store()
             return True
         elif item == 'D': #DUPLICATE HOST
             if self.treeServers.get_selection().get_selected()[1]!=None and not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):                
@@ -1006,7 +1017,8 @@ class Wmain(SimpleGladeApp):
             terminal.feed_child(command)
     
     def terminal_copy(self, terminal):
-        terminal.copy_clipboard()
+        #terminal.copy_clipboard()
+        terminal.copy_clipboard_format(Vte.Format.TEXT)
 
     def terminal_paste(self, terminal):
         terminal.paste_clipboard()
@@ -1354,6 +1366,10 @@ class Wmain(SimpleGladeApp):
         
         #Leer shorcuts        
         scuts = {}
+        try:
+            scuts[cp.get("shortcuts", "quit")] = _QUIT
+        except:
+            scuts["CTRL+Q"] = _QUIT
         try:
             scuts[cp.get("shortcuts", "copy")] = _COPY
         except:
@@ -1938,14 +1954,14 @@ class Wmain(SimpleGladeApp):
             if not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):
                 #Eliminar solo el nodo
                 name = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],0)
-                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar el host"), name) ) == Gtk.RESPONSE_OK:
+                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar el host"), name) ) == Gtk.ResponseType.OK:
                     host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)
                     groups[host.group].remove(host)
                     self.updateTree()
             else:                
                 #Eliminar todo el grupo                
                 group = self.get_group(self.treeModel.iter_children(self.treeServers.get_selection().get_selected()[1]))
-                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar todos los hosts del grupo"), group) ) == Gtk.RESPONSE_OK:                                
+                if msgconfirm("%s [%s]?" % (_("Confirma que desea eliminar todos los hosts del grupo"), group) ) == Gtk.ResponseType.OK:                                
                     try:
                         del groups[group]
                     except:
@@ -2905,10 +2921,11 @@ class Wconfig(SimpleGladeApp):
             conf.FONT_COLOR=""
             conf.BACK_COLOR=""
         else:
-            fcolor = self.btnFColor.color
-            bcolor = self.btnBColor.color
+            fcolor = self.btnFColor.get_rgba()
+            bcolor = self.btnBColor.get_rgba()
             conf.FONT_COLOR = fcolor.to_string()
             conf.BACK_COLOR = bcolor.to_string()
+            
 
         #print(conf.FONT_COLOR, conf.BACK_COLOR)
 

@@ -21,13 +21,12 @@ Make sure you have installed the following packages (Ubuntu):
 
 - python3-gi (>= 3.0)
 - expect
-- libglade2-0 (validate!)
-- python-glade2 (validate!)
+- pycrypto
 
-On Ubuntu you can install them with the following one-liner:
+On Ubuntu and Debian you can install them with the following one-liner:
 
 ```shell
-sudo apt-get install python3-gi expect python3-gi-cairo gir1.2-gtk-3.0
+sudo apt-get install python3-gi python3-crypto expect python3-gi-cairo gir1.2-gtk-3.0
 ```
 
 ## Installing
@@ -69,5 +68,5 @@ Categories=GTK;GNOME;Network;
 Replace USERNAME in examples above with your username.
 
 # Note about the author
-The original author of GCM is Renzo Bertuzzi (kuthulu@gmail.com) and forked from GCM implementation by matko.jun@gmail.com
-This work is the port of GMC to Python3 and PyGObjects (GTK+3, GDK 2.6, Vte 2.91) by Luis Armando Medina Avitia (lamedina@gmail.com)
+The original author of GCM is Renzo Bertuzzi (kuthulu@gmail.com), this works is a fork from GCM implementation by matko.jun@gmail.com
+This work is the port of GMC from Python 2 to Python 3 and PyGObjects (GTK+3, GDK 2.6, Vte 2.91) by Luis Armando Medina Avitia (lamedina@gmail.com)
