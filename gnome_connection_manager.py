@@ -86,7 +86,7 @@ except:
 
 app_name = "Gnome Connection Manager"
 app_version = "1.3.1"
-app_web = "http://www.comoinstalarlinux.com/software/gcm/"
+app_web = "https://www.comoinstalarlinux.com/gcm/"
 app_fileversion = "1"
 
 BASE_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -523,7 +523,6 @@ class Wmain(SimpleGladeApp):
             pos = self.search['lines'][i].find(self.search['word'])
             if pos != -1:                
                 self.search['index'] = i if backwards else i + 1
-                #print 'found at line %d column %d, index=%d' % (i, pos, self.search['index'])
                 GObject.timeout_add(0, lambda: self.search['terminal'].get_adjustment().set_value(i))
                 self.search['terminal'].queue_draw()
                 break
@@ -581,7 +580,7 @@ class Wmain(SimpleGladeApp):
             if self.treeServers.get_selection().get_selected()[1]!=None and not self.treeModel.iter_has_child(self.treeServers.get_selection().get_selected()[1]):
                 host = self.treeModel.get_value(self.treeServers.get_selection().get_selected()[1],1)
                 text = str(host.host)
-                print(text)              
+                              
                 self.clipboard.set_text( text , -1)
                 self.clipboard.store()
             return True
@@ -984,8 +983,6 @@ class Wmain(SimpleGladeApp):
             fcolor = Gdk.RGBA()
             bcolor = Gdk.RGBA()
 
-            print(host.font_color, fcolor, conf.FONT_COLOR, host.back_color, bcolor, conf.BACK_COLOR)
-
             if host.font_color == '' or host.font_color == None or host.back_color == '' or host.back_color == None:
                 fcolor.parse(conf.FONT_COLOR)
                 bcolor.parse(conf.BACK_COLOR)
@@ -1004,8 +1001,15 @@ class Wmain(SimpleGladeApp):
             scrollPane = Gtk.ScrolledWindow()            
             scrollPane.connect('button_press_event', lambda *args: True)
             scrollPane.set_property('hscrollbar-policy', Gtk.PolicyType.NEVER)
-            tab = NotebookTabLabel("  %s  " % (host.name), self.nbConsole, scrollPane, self.popupMenuTab )
             
+            if host.name == 'local':
+                tab = NotebookTabLabel("  %s  " % (host.name), self.nbConsole, scrollPane, self.popupMenuTab )
+            else:
+                txtHint = ''
+                if host.user and host.host :
+                    txtHint = host.user+"@"+host.host+" port: "+host.port
+                tab = NotebookTabLabel("  [%s] %s " % (host.group, host.name if host.group else host.name), self.nbConsole, scrollPane, self.popupMenuTab, txtHint)
+
             v.connect("child-exited", lambda widget: tab.mark_tab_as_closed())
             v.connect('focus', self.on_tab_focus)
             v.connect('button_press_event', self.on_terminal_click)
@@ -1055,7 +1059,7 @@ class Wmain(SimpleGladeApp):
             else:
                 cmd = SSH_COMMAND
                 password = host.password
-                print("tipo:", host.type)
+                
                 if host.type == 'ssh':
                     if len(host.user)==0:
                         host.user = get_username()
@@ -1113,8 +1117,6 @@ class Wmain(SimpleGladeApp):
                 #              callback, 
                 #              *user_data)
 
-                print(cmd, args)
-
                 v.spawn_sync(Vte.PtyFlags.DEFAULT,
                               os.environ['HOME'],
                               args,
@@ -1154,7 +1156,6 @@ class Wmain(SimpleGladeApp):
             msgbox("%s: %s : %s" % (_("Error al conectar con servidor"), sys.exc_info()[1], tace_text))
             
     def send_data(self, terminal, data):
-        print(data)
         sdata = '%s\r' % (data)
         terminal.feed_child(sdata.encode("utf-8"))        
         return False
@@ -2058,15 +2059,15 @@ class HostUtils:
         sha256 = hashlib.sha256()
         sha256.update(pwd.encode('utf-8'))
         iv = str(sha256.hexdigest()[0:16])
-        print("pwd:", pwd, iv )
+        
 
         obj2 = AES.new(pwd, AES.MODE_CBC, iv )
         ciphertext = bytes.fromhex(cp.get(section, "pass"))
-        print("cyphered:", ciphertext )
+        
         deciphertext = obj2.decrypt(ciphertext)
         dpassword = deciphertext.decode()
         password = dpassword.lstrip()
-        print("password:", password )
+        
 
         description = HostUtils.get_val(cp, section, "description", "")
         private_key = HostUtils.get_val(cp, section, "private_key", "")
@@ -2097,7 +2098,7 @@ class HostUtils:
         sha256 = hashlib.sha256()
         sha256.update(pwd.encode('utf-8'))
         iv = str(sha256.hexdigest()[0:16])
-        print("pwd:", pwd, iv )
+        
 
         cp.set(section, "group", host.group)
         cp.set(section, "name", host.name)
@@ -2109,15 +2110,12 @@ class HostUtils:
         obj = AES.new(pwd, AES.MODE_CBC, iv )
         lendif = len(host.password) % 16
         fillsp = 16 - lendif
-        print("text: '",host.password+(' '*fillsp), "'")
-        ciphertext = obj.encrypt(host.password+(' '*fillsp))
-        print(ciphertext)
+        
+        ciphertext = obj.encrypt(host.password+(' '*fillsp))  
 
         obj2 = AES.new(pwd, AES.MODE_CBC, iv )
         deciphertext = obj2.decrypt(ciphertext)
         password = deciphertext.decode()
-
-        print("password: '", password.rstrip(), "'")
 
         cp.set(section, "pass", ciphertext.hex() )
 
@@ -2163,10 +2161,8 @@ class Whost(SimpleGladeApp):
         self.cmbGroup = self.get_widget("cmbGroup1")
         self.cmbGroup.show_all()
         self.txtGroupName = self.get_widget("txtGroupname")
-
-        
+    
         #self.cmbGroup.set_entry_text_column(0)
-        print(self.cmbGroup)
 
         self.txtName = self.get_widget("txtName")
         self.txtDescription = self.get_widget("txtDescription")
@@ -2179,7 +2175,6 @@ class Whost(SimpleGladeApp):
         self.txtPort = self.get_widget("txtPort")
         #self.cmbGroup1.get_model().clear()
         for group in groups:
-            print(group)
             self.cmbGroup.append_text(group)
         self.isNew = True
         
@@ -2433,7 +2428,6 @@ class Whost(SimpleGladeApp):
         name=''
         if tree_iter is not None:
             model = widget.get_model()
-            print(model[tree_iter][:2])
             name = model[tree_iter][:2]
         else:
             entry = widget.get_child()
@@ -2799,9 +2793,6 @@ class Wconfig(SimpleGladeApp):
             bcolor = self.btnBColor.get_rgba()
             conf.FONT_COLOR = fcolor.to_string()
             conf.BACK_COLOR = bcolor.to_string()
-            
-
-        #print(conf.FONT_COLOR, conf.BACK_COLOR)
 
         if self.btnFont.get_font_name() != 'monospace' and not self.chkDefaultFont.get_active():
             conf.FONT = self.btnFont.selected_font.to_string()
@@ -2836,13 +2827,13 @@ class Wconfig(SimpleGladeApp):
     #-- Wconfig.on_btnBColor_clicked {
     def on_btnBColor_clicked(self, widget, *args):
         widget.color = widget.get_rgba()
-        print(widget.color, widget.get_rgba())
+        
     #-- Wconfig.on_btnBColor_clicked }
 
     #-- Wconfig.on_btnFColor_clicked {
     def on_btnFColor_clicked(self, widget, *args):
         widget.color = widget.get_rgba()
-        print(widget.color, widget.get_rgba())
+        
     #-- Wconfig.on_btnFColor_clicked }
 
     #-- Wconfig.on_chkDefaultColors_toggled {
@@ -2979,7 +2970,7 @@ class Wcluster(SimpleGladeApp):
 class NotebookTabLabel(Gtk.HBox):
     '''Notebook tab label with close button.
     '''
-    def __init__(self, title, owner_, widget_, popup_):
+    def __init__(self, title, owner_, widget_, popup_, hint=''):
         Gtk.HBox.__init__(self, False, 0)
         
         self.title = title
@@ -2989,6 +2980,7 @@ class NotebookTabLabel(Gtk.HBox):
         self.eb.connect('button-press-event', self.popupmenu, label)
         label.set_alignment(0.0, 0.5)
         label.set_text(title)
+        label.set_tooltip_text(hint)
         self.eb.add(label)        
         self.pack_start(self.eb, expand=False, fill=False, padding=1 )        
         label.show()        
