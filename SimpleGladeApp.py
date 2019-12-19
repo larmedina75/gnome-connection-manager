@@ -42,6 +42,7 @@ def bindtextdomain(app_name, locale_dir=None):
         import gettext
         locale.setlocale(locale.LC_ALL, "")
         #Gtk.glade.bindtextdomain(app_name, locale_dir)
+        print(locale.LC_ALL)
         print(app_name,locale_dir)
         locale.bindtextdomain(app_name, locale_dir)
         gettext.bindtextdomain(app_name, locale_dir)

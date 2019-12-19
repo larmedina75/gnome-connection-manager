@@ -48,6 +48,7 @@ import time
 import shlex
 import traceback
 import webbrowser
+import codecs
   
 import gi
 gi.require_version('Gtk', '3.0')
@@ -93,7 +94,13 @@ BASE_PATH = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 SSH_BIN = 'ssh'
 TEL_BIN = 'telnet'
-SHELL   = os.environ["SHELL"]
+
+SHELL           = os.environ["SHELL"]
+DESKTOP_SESSION = os.environ["DESKTOP_SESSION"]
+CURRENT_DESKTOP = os.environ["XDG_CURRENT_DESKTOP"]
+TERMINAL        = ""
+if os.path.exists("/usr/bin/x-terminal-emulator"):
+    TERMINAL    = os.popen("grep terminal\\' /usr/bin/x-terminal-emulator | awk -F \"'\" '{ print $2 }' ").read()
 
 SSH_COMMAND = BASE_PATH + "/ssh.expect"
 CONFIG_FILE = os.getenv("HOME") + "/.gcm/gcm.conf"
@@ -237,6 +244,7 @@ def show_open_dialog(parent, title, action):
             
 def get_key_name(event):
     name = ""
+    
     if event.state & 4:
         name = name + "CTRL+"
     if event.state & 1:
@@ -245,6 +253,7 @@ def get_key_name(event):
         name = name + "ALT+"
     if event.state & 67108864:
         name = name + "SUPER+"
+    print(name + Gdk.keyval_name(event.keyval).upper())
     return name + Gdk.keyval_name(event.keyval).upper()
      
 def get_username():
@@ -1050,7 +1059,7 @@ class Wmain(SimpleGladeApp):
                 v.spawn_sync(
                     Vte.PtyFlags.DEFAULT,
                     os.environ['HOME'],
-                    ["/bin/sh"],
+                    [SHELL],
                     [],
                     GLib.SpawnFlags.DO_NOT_REAP_CHILD,
                     None,

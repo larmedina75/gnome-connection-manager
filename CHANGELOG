@@ -14,6 +14,8 @@
 #        - Hor. and Ver. Notebook split
 #        - Added tooltip to tabs when a user,ip, and port exist
 #        - Rusian lang fix from alternate fork 
+#        - Default Terminal detected
+#        - Change correct shell to executer on terminal widgets
 #
 # v1.3.0 - Python 3 code and GTK3 quick rewrite, fix bugs and fist run.
 #        - code rewrite to migrate from python2 to python3 ans PyGObject gi
