@@ -105,8 +105,10 @@ class SimpleGladeApp():
         self.glade = None
 
         self.builder = Gtk.Builder()
+        self.builder.set_translation_domain(domain)     
         self.builder.add_from_file(self.glade_path)
         self.builder.connect_signals(self)
+
 
         if root:
             self.main_widget = self.builder.get_object(root)
@@ -114,7 +116,7 @@ class SimpleGladeApp():
         else:
             self.main_widget = None
 
-        # self.glade = self.create_glade(self.glade_path, root, domain)
+        #self.glade = self.create_glade(self.glade_path, root, domain)
 
         self.normalize_names()
         self.new()

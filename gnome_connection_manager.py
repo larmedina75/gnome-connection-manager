@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-# Python modle simple_connection_manager.py
+# Python module simple_connection_manager.py
 # 
 # Simple Connection Manager by Luis Armando Medina Avitia (lamedina@gmail.com)
 #
 # based on Gnome Connection Manager (2012) by Renzo Bertuzzi (kuthulu@gmail.com) - CHILE
-# Last change: 20191122
+# Last change: 20191219
 #
 #
 #TODO
@@ -68,7 +68,6 @@ if e != 0:
     error.run()
     sys.exit (1)
 
-#Gtk.gdk.threads_init()
 Gdk.threads_init()
 
 from SimpleGladeApp import SimpleGladeApp
@@ -100,7 +99,7 @@ DESKTOP_SESSION = os.environ["DESKTOP_SESSION"]
 CURRENT_DESKTOP = os.environ["XDG_CURRENT_DESKTOP"]
 TERMINAL        = ""
 if os.path.exists("/usr/bin/x-terminal-emulator"):
-    TERMINAL    = os.popen("grep terminal\\' /usr/bin/x-terminal-emulator | awk -F \"'\" '{ print $2 }' ").read()
+    TERMINAL    = os.popen("grep exec /usr/bin/x-terminal-emulator | awk -F \"'\" '{ print $2 }' ").read()
 
 SSH_COMMAND = BASE_PATH + "/ssh.expect"
 CONFIG_FILE = os.getenv("HOME") + "/.gcm/gcm.conf"
@@ -291,53 +290,6 @@ def initialise_encyption_key():
     except:
         msgbox("Error initialising key_file")
 
-# ## funciones para encryptar passwords - no son muy seguras, pero impiden que los pass se guarden en texto plano
-# def xor(pw, str1):
-#     c = 0
-#     liste = []
-#     for k in xrange(len(str1)):
-#         if c > len(pw)-1:
-#             c = 0
-#         fi = ord(pw[c])
-#         c += 1
-#         se = ord(str1[k])
-#         fin = operator.xor(fi, se)
-#         liste += [chr(fin)]
-#     return liste
-        
-# def encrypt_old(passw, string):
-#     try:
-#         ret = xor(passw, string)    
-#         s = base64.b64encode("".join(ret))
-#     except:
-#         s = ""
-#     return s
- 
-# def decrypt_old(passw, string):
-#     try:
-#         ret = xor(passw, base64.b64decode(string))
-#         s = "".join(ret)
-#     except:
-#         s = ""
-#     return s
-    
-# def encrypt(passw, string):
-#     try:
-#         print(passw, string)
-#         s = pyAES.encrypt(string, passw)
-#     except Exception as e:
-#         msgbox("%s\n%s" % (_("Error al encriptar el password"), str(e)+traceback.format_exc()))
-#         s = ""
-#     return s
- 
-# def decrypt(passw, string):
-#     try:
-#         s = decrypt_old(passw, string) if conf.VERSION == 0 else pyAES.decrypt(string, passw)
-#     except Exception as e:
-#         print("type error: " + str(e))
-#         print(traceback.format_exc())
-#         s = ""
-#     return s
 
 class Wmain(SimpleGladeApp):
 
@@ -421,7 +373,6 @@ class Wmain(SimpleGladeApp):
 
         # Code for other initialization actions should be added here.
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
 
         
     #-- Wmain.new {
@@ -1393,7 +1344,7 @@ class Wmain(SimpleGladeApp):
                 menu = self.get_folder_menu(self.menuServers, '', path)
                 if menu == None:
                     menu = Gtk.ImageMenuItem(folder)
-                    #menu.set_image(Gtk.image_new_from_stock(Gtk.STOCK_DIRECTORY, Gtk.ICON_SIZE_MENU))
+                    menu.set_image(Gtk.Image.new_from_stock(Gtk.STOCK_DIRECTORY, Gtk.IconSize.MENU))
                     menuNode.prepend(menu)
                     menuNode = Gtk.Menu()
                     menu.set_submenu(menuNode)
@@ -1525,7 +1476,7 @@ class Wmain(SimpleGladeApp):
             text = cnb.get_tab_label(csp).get_text()
             
             csp.reparent(nb)
-
+            
             csp = nb.get_nth_page(0)
                         
             tab = NotebookTabLabel(text, nb, csp, self.popupMenuTab)
@@ -1765,7 +1716,7 @@ class Wmain(SimpleGladeApp):
             if isinstance(widget, Gtk.Notebook):
                 pos = event.x + widget.get_allocation().x
                 size = widget.get_tab_label(widget.get_nth_page(widget.get_n_pages()-1)).get_allocation()
-                if pos <= size.x + size.width + 2 * widget.get_property("tab-vborder") + 8 or event.x >= widget.get_allocation().width - widget.style_get_property("scroll-arrow-hlength"):
+                if pos <= size.x + size.width + 2 * widget.get_tab_vborder() + 8 or event.x >= widget.get_allocation().width - widget.style_get_property("scroll-arrow-hlength"):
                     return True
             self.addTab(widget if isinstance(widget, Gtk.Notebook) else self.nbConsole, 'local')
             return True

@@ -1395,11 +1395,11 @@ msgstr "Only on clean exit"
 msgid "_Ver"
 msgstr "_View"
 
-#: ../gnome-connection-manager.glade:155 ../gnome-connection-manager.glade:282
+#: ../gnome-connection-manager.glade:233 
 msgid "Mostrar Toolbar"
 msgstr "Show Toolbar"
 
-#: ../gnome-connection-manager.glade:165 ../gnome-connection-manager.glade:292
+#: ../gnome-connection-manager.glade:244
 msgid "Mostrar Panel"
 msgstr "Show Panel"
 
