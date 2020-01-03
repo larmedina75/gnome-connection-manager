@@ -176,7 +176,7 @@ class conf():
 
 def msgbox(text, parent=None):
     msgBox = Gtk.MessageDialog(parent=parent, 
-                               flags=Gtk.DialogFlags.MODAL, 
+                               modal=True,
                                message_type=Gtk.MessageType.ERROR, 
                                buttons=Gtk.ButtonsType.OK, 
                                text=text)
@@ -186,7 +186,7 @@ def msgbox(text, parent=None):
 
 def msgconfirm(text):
     msgBox = Gtk.MessageDialog(parent=None, 
-                               flags=Gtk.DialogFlags.MODAL, 
+                               modal=True, 
                                message_type=Gtk.MessageType.QUESTION, 
                                buttons=Gtk.ButtonsType.OK_CANCEL, 
                                text=text)
@@ -199,7 +199,7 @@ def msgconfirm(text):
 def inputbox(title, text, default='', password=False):
     msgBox = EntryDialog(title, text, default, mask=password)
     msgBox.set_icon_from_file(ICON_PATH)
-    if msgBox.run() == Gtk.RESPONSE_OK:
+    if msgBox.run() == Gtk.ResponseType.OK:
         response = msgBox.value
     else:
         response = None
@@ -217,7 +217,7 @@ def show_font_dialog(parent, title, button):
 
     response = parent.dlgFont.run()
 
-    if response == Gtk.RESPONSE_OK:        
+    if response == Gtk.ResponseType.OK:        
         button.selected_font = pango.FontDescription(fontsel.get_font_name())        
         button.set_label(button.selected_font.to_string())
         button.get_child().modify_font(button.selected_font)
@@ -225,15 +225,15 @@ def show_font_dialog(parent, title, button):
     
 def show_open_dialog(parent, title, action):        
     dlg = Gtk.FileChooserDialog(title=title, parent=parent, action=action)
-    dlg.add_button(Gtk.STOCK_CANCEL, Gtk.RESPONSE_CANCEL)
+    dlg.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
     
-    dlg.add_button(Gtk.STOCK_SAVE if action==Gtk.FILE_CHOOSER_ACTION_SAVE else Gtk.STOCK_OPEN, Gtk.RESPONSE_OK)        
+    dlg.add_button(Gtk.STOCK_SAVE if action==Gtk.FileChooserAction.SAVE else Gtk.STOCK_OPEN, Gtk.ResponseType.OK)        
     dlg.set_do_overwrite_confirmation(True)        
     if not hasattr(parent,'lastPath'):
         parent.lastPath = os.path.expanduser("~")
     dlg.set_current_folder( parent.lastPath )
     
-    if dlg.run() == Gtk.RESPONSE_OK:
+    if dlg.run() == Gtk.ResponseType.OK:
         filename = dlg.get_filename()
         parent.lastPath = os.path.dirname(filename)
     else:
@@ -259,7 +259,9 @@ def get_username():
     return os.getenv('USER') or os.getenv('LOGNAME') or os.getenv('USERNAME')
 
 def get_password():
+    global enc_passwd
     #return get_username() + enc_passwd
+
     return enc_passwd
     
 def load_encryption_key():
@@ -289,6 +291,37 @@ def initialise_encyption_key():
             f.write(enc_passwd)
     except:
         msgbox("Error initialising key_file")
+
+
+def encrypt(passw, string):
+    sha256 = hashlib.sha256()
+    sha256.update(passw.encode('utf-8'))
+    iv = str(sha256.hexdigest()[0:16])
+
+    pwd_bkey32 = "{: <32}".format(passw).encode('utf-8')
+    lenstr =len(string)
+    strfill = ""
+    if lenstr % 16 != 0 :
+        strfill = " " * (16 - lenstr % 16)
+    
+    obj = AES.new(pwd_bkey32, AES.MODE_CBC, iv )
+    ciphertext = obj.encrypt(string + strfill)
+    print(passw, string, ciphertext.hex())
+    return ciphertext.hex()
+
+
+def decrypt(passw, string):
+    sha256 = hashlib.sha256()
+    sha256.update(passw.encode('utf-8'))
+    iv = str(sha256.hexdigest()[0:16])
+
+    pwd_bkey32 = "{: <32}".format(passw).encode('utf-8')
+    byte_ciphertext = bytes.fromhex(string)
+    obj2 = AES.new(pwd_bkey32, AES.MODE_CBC, iv )
+    deciphertext = obj2.decrypt(byte_ciphertext)
+
+    print(passw, string, deciphertext, deciphertext.decode('utf-8'))
+    return deciphertext.decode('utf-8').strip()
 
 
 class Wmain(SimpleGladeApp):
@@ -334,8 +367,7 @@ class Wmain(SimpleGladeApp):
         self.nbConsole.set_scrollable(True)
         self.nbConsole.set_group_name('default')
         self.nbConsole.connect('page_removed', self.on_page_removed)        
-        self.nbConsole.connect("page-added", self.on_page_added)                                        
-        
+        self.nbConsole.connect("page-added", self.on_page_added)
                 
         self.hpMain.previous_position = 150
         
@@ -1171,28 +1203,28 @@ class Wmain(SimpleGladeApp):
         
         #Leer configuracion general
         try:
-            conf.WORD_SEPARATORS = cp.get("options", "word-separators")
-            conf.BUFFER_LINES = cp.getint("options", "buffer-lines")
-            conf.CONFIRM_ON_EXIT = cp.getboolean("options", "confirm-exit")
-            conf.FONT_COLOR = cp.get("options", "font-color")
-            conf.BACK_COLOR = cp.get("options", "back-color")
-            conf.TRANSPARENCY = cp.getint("options", "transparency")
+            conf.WORD_SEPARATORS      = cp.get("options", "word-separators")
+            conf.BUFFER_LINES         = cp.getint("options", "buffer-lines")
+            conf.CONFIRM_ON_EXIT      = cp.getboolean("options", "confirm-exit")
+            conf.FONT_COLOR           = cp.get("options", "font-color")
+            conf.BACK_COLOR           = cp.get("options", "back-color")
+            conf.TRANSPARENCY         = cp.getint("options", "transparency")
             conf.PASTE_ON_RIGHT_CLICK = cp.getboolean("options", "paste-right-click")
             conf.CONFIRM_ON_CLOSE_TAB = cp.getboolean("options", "confirm-close-tab")
-            conf.CHECK_UPDATES = cp.getboolean("options", "check-updates")
-            conf.COLLAPSED_FOLDERS = cp.get("window", "collapsed-folders")
-            conf.LEFT_PANEL_WIDTH = cp.getint("window", "left-panel-width")
-            conf.WINDOW_WIDTH = cp.getint("window", "window-width")
-            conf.WINDOW_HEIGHT = cp.getint("window", "window-height")
-            conf.FONT = cp.get("options", "font")
-            conf.HIDE_DONATE = cp.getboolean("options", "donate")
-            conf.AUTO_COPY_SELECTION = cp.getboolean("options", "auto-copy-selection")
-            conf.LOG_PATH = cp.get("options", "log-path")
-            conf.VERSION = cp.get("options", "version")
-            conf.AUTO_CLOSE_TAB = cp.getint("options", "auto-close-tab")
-            conf.SHOW_PANEL = cp.getboolean("window", "show-panel")
-            conf.SHOW_TOOLBAR = cp.getboolean("window", "show-toolbar")
-            conf.STARTUP_LOCAL = cp.getboolean("options","startup-local")
+            conf.CHECK_UPDATES        = cp.getboolean("options", "check-updates")
+            conf.COLLAPSED_FOLDERS    = cp.get("window", "collapsed-folders")
+            conf.LEFT_PANEL_WIDTH     = cp.getint("window", "left-panel-width")
+            conf.WINDOW_WIDTH         = cp.getint("window", "window-width")
+            conf.WINDOW_HEIGHT        = cp.getint("window", "window-height")
+            conf.FONT                 = cp.get("options", "font")
+            conf.HIDE_DONATE          = cp.getboolean("options", "donate")
+            conf.AUTO_COPY_SELECTION  = cp.getboolean("options", "auto-copy-selection")
+            conf.LOG_PATH             = cp.get("options", "log-path")
+            conf.VERSION              = cp.get("options", "version")
+            conf.AUTO_CLOSE_TAB       = cp.getint("options", "auto-close-tab")
+            conf.SHOW_PANEL           = cp.getboolean("window", "show-panel")
+            conf.SHOW_TOOLBAR         = cp.getboolean("window", "show-toolbar")
+            conf.STARTUP_LOCAL        = cp.getboolean("options","startup-local")
         except:
             print("{}: {}".format( _("Entrada invalida en archivo de configuracion"), sys.exc_info()[1] ))
         
@@ -1391,31 +1423,31 @@ class Wmain(SimpleGladeApp):
         cp.read( CONFIG_FILE + ".tmp" )
         
         cp.add_section("options")
-        cp.set("options", "word-separators", conf.WORD_SEPARATORS)        
-        cp.set("options", "buffer-lines", conf.BUFFER_LINES)
-        cp.set("options", "startup-local", conf.STARTUP_LOCAL)
-        cp.set("options", "confirm-exit", conf.CONFIRM_ON_EXIT)
-        cp.set("options", "font-color", conf.FONT_COLOR)
-        cp.set("options", "back-color", conf.BACK_COLOR)
-        cp.set("options", "transparency", conf.TRANSPARENCY)        
-        cp.set("options", "paste-right-click", conf.PASTE_ON_RIGHT_CLICK)
-        cp.set("options", "confirm-close-tab", conf.CONFIRM_ON_CLOSE_TAB)
-        cp.set("options", "check-updates", conf.CHECK_UPDATES)
-        cp.set("options", "font", conf.FONT)
-        cp.set("options", "donate", conf.HIDE_DONATE)
+        cp.set("options", "word-separators",     conf.WORD_SEPARATORS)        
+        cp.set("options", "buffer-lines",        conf.BUFFER_LINES)
+        cp.set("options", "startup-local",       conf.STARTUP_LOCAL)
+        cp.set("options", "confirm-exit",        conf.CONFIRM_ON_EXIT)
+        cp.set("options", "font-color",          conf.FONT_COLOR)
+        cp.set("options", "back-color",          conf.BACK_COLOR)
+        cp.set("options", "transparency",        conf.TRANSPARENCY)        
+        cp.set("options", "paste-right-click",   conf.PASTE_ON_RIGHT_CLICK)
+        cp.set("options", "confirm-close-tab",   conf.CONFIRM_ON_CLOSE_TAB)
+        cp.set("options", "check-updates",       conf.CHECK_UPDATES)
+        cp.set("options", "font",                conf.FONT)
+        cp.set("options", "donate",              conf.HIDE_DONATE)
         cp.set("options", "auto-copy-selection", conf.AUTO_COPY_SELECTION)
-        cp.set("options", "log-path", conf.LOG_PATH)
-        cp.set("options", "version", app_fileversion)
-        cp.set("options", "auto-close-tab", conf.AUTO_CLOSE_TAB)
+        cp.set("options", "log-path",            conf.LOG_PATH)
+        cp.set("options", "version",             app_fileversion)
+        cp.set("options", "auto-close-tab",      conf.AUTO_CLOSE_TAB)
 
         collapsed_folders = ','.join(self.get_collapsed_nodes())         
         cp.add_section("window")
-        cp.set("window", "collapsed-folders", collapsed_folders)
-        cp.set("window", "left-panel-width", self.hpMain.get_position())
-        cp.set("window", "window-width", conf.WINDOW_WIDTH)
-        cp.set("window", "window-height", conf.WINDOW_HEIGHT)
-        cp.set("window", "show-panel", conf.SHOW_PANEL)
-        cp.set("window", "show-toolbar", conf.SHOW_TOOLBAR)
+        cp.set("window", "collapsed-folders",    collapsed_folders)
+        cp.set("window", "left-panel-width",     self.hpMain.get_position())
+        cp.set("window", "window-width",         conf.WINDOW_WIDTH)
+        cp.set("window", "window-height",        conf.WINDOW_HEIGHT)
+        cp.set("window", "show-panel",           conf.SHOW_PANEL)
+        cp.set("window", "show-toolbar",         conf.SHOW_TOOLBAR)
         
         i=1
         for grupo in groups:
@@ -1549,21 +1581,28 @@ class Wmain(SimpleGladeApp):
             delattr(self, "check_notebook")
         
     def show_save_buffer(self, terminal):        
-        dlg = Gtk.FileChooserDialog(title=_("Guardar como"), parent=self.wMain, action=Gtk.FILE_CHOOSER_ACTION_SAVE)
-        dlg.add_button(Gtk.STOCK_CANCEL, Gtk.RESPONSE_CANCEL)
-        dlg.add_button(Gtk.STOCK_SAVE, Gtk.RESPONSE_OK)        
+        dlg = Gtk.FileChooserDialog(title=_("Guardar como"), parent=self.wMain, action=Gtk.FileChooserAction.SAVE)
+        dlg.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
+        dlg.add_button(Gtk.STOCK_SAVE, Gtk.ResponseType.OK)        
         dlg.set_do_overwrite_confirmation(True)
         dlg.set_current_name( os.path.basename("gcm-buffer-%s.txt" % (time.strftime("%Y%m%d%H%M%S")) ))
         if not hasattr(self,'lastPath'):
             self.lastPath = os.path.expanduser("~")
         dlg.set_current_folder( self.lastPath )
         
-        if dlg.run() == Gtk.RESPONSE_OK:
+        if dlg.run() == Gtk.ResponseType.OK:
             filename = dlg.get_filename()
             self.lastPath = os.path.dirname(filename)            
     
             try:              
-                buff = terminal.get_text_range(0, 0, terminal.get_property('scrollback-lines')-1, terminal.get_column_count()-1, lambda *args: True, None, None ).strip()                
+                buff, buff_attributes = terminal.get_text_range(start_row=0, 
+                                               start_col=0,
+                                               end_row=terminal.get_property('scrollback-lines')-1,
+                                               end_col=terminal.get_column_count()-1, 
+                                               is_selected=None,
+                                               user_data=None )
+                print(filename)  
+                print(buff)                      
                 f = open(filename, "w")
                 f.write(buff)
                 f.close()
@@ -1619,24 +1658,25 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_importar_servidores1_activate {
     def on_importar_servidores1_activate(self, widget, *args):
-        filename = show_open_dialog(parent=self.wMain, title=_("Abrir"), action=Gtk.FILE_CHOOSER_ACTION_OPEN)
+        filename = show_open_dialog(parent=self.wMain, title=_("Abrir"), action=Gtk.FileChooserAction.OPEN)
         if filename != None:            
             password = inputbox(_('Importar Servidores'), _('Ingrese clave: '), password=True)
             if password == None:
-                return                                                
-            
-            #abrir archivo con lista de servers y cargarlos en el arbol
+                return
+
+            # open exported servers file and load it to hosts tree
             try:
                 cp= configparser.RawConfigParser( )
                 cp.read( filename )
             
-                #validar el pass
+                # password lock validation
                 s = decrypt(password, cp.get("gcm", "gcm"))
                 if (s != password[::-1]):
                     msgbox(_("Clave invalida"))
                     return
-            
-                if msgconfirm(_(u'Se sobreescribirá la lista de servidores, continuar?')) != Gtk.RESPONSE_OK:
+                
+                # Notify server tree overwrite warning.
+                if msgconfirm(_(u'Se sobreescribirá la lista de servidores, continuar?')) != Gtk.ResponseType.OK:
                     return
                     
                 grupos={}
@@ -1645,14 +1685,15 @@ class Wmain(SimpleGladeApp):
                         continue                    
                     host = HostUtils.load_host_from_ini(cp, section, password)
         
-                    if not grupos.has_key(host.group):                    
+                    if not host.group in grupos:                    
                         grupos[host.group]=[]  
         
                     grupos[host.group].append( host )
             except:                
                 msgbox(_("Archivo invalido"))
                 return
-            #sobreescribir lista de hosts
+
+            # overwrite host tree
             global groups
             groups=grupos
             
@@ -1661,7 +1702,8 @@ class Wmain(SimpleGladeApp):
 
     #-- Wmain.on_exportar_servidores1_activate {
     def on_exportar_servidores1_activate(self, widget, *args):
-        filename = show_open_dialog(parent=self.wMain, title=_("Guardar como"), action=Gtk.FILE_CHOOSER_ACTION_SAVE)
+        filename = show_open_dialog(parent=self.wMain, title=_("Guardar como"), action=Gtk.FileChooserAction.SAVE)
+        print(filename)
         if filename != None:
             password = inputbox(_('Exportar Servidores'), _('Ingrese clave: '), password=True)
             if password == None:
@@ -1672,7 +1714,9 @@ class Wmain(SimpleGladeApp):
                 cp.read( filename + ".tmp" )
                 i=1
                 cp.add_section("gcm")
-                cp.set("gcm", "gcm", encrypt(password, password[::-1]))
+                crypted_text = encrypt(password, password[::-1])
+                print("gcm", crypted_text)
+                cp.set("gcm", "gcm", crypted_text)
                 global groups
                 for grupo in groups:
                     for host in groups[grupo]:
@@ -1686,6 +1730,7 @@ class Wmain(SimpleGladeApp):
                 os.rename(filename + ".tmp", filename)
             except:
                 msgbox(_("Archivo invalido"))
+
     #-- Wmain.on_exportar_servidores1_activate }
 
     #-- Wmain.on_salir1_activate {
@@ -2020,14 +2065,14 @@ class HostUtils:
         sha256.update(pwd.encode('utf-8'))
         iv = str(sha256.hexdigest()[0:16])
         
+        pwd_bkey32 = "{: <32}".format(pwd).encode('utf-8')
 
-        obj2 = AES.new(pwd, AES.MODE_CBC, iv )
+        obj2 = AES.new(pwd_bkey32, AES.MODE_CBC, iv )
         ciphertext = bytes.fromhex(cp.get(section, "pass"))
         
         deciphertext = obj2.decrypt(ciphertext)
-        dpassword = deciphertext.decode()
-        password = dpassword.lstrip()
-        
+        dpassword    = deciphertext.decode()
+        password     = dpassword.lstrip()
 
         description = HostUtils.get_val(cp, section, "description", "")
         private_key = HostUtils.get_val(cp, section, "private_key", "")
@@ -2059,23 +2104,31 @@ class HostUtils:
         sha256.update(pwd.encode('utf-8'))
         iv = str(sha256.hexdigest()[0:16])
         
-
         cp.set(section, "group", host.group)
         cp.set(section, "name", host.name)
         cp.set(section, "description", host.description)
         cp.set(section, "host", host.host)
         cp.set(section, "user", host.user)
         #cp.set(section, "pass", encrypt(pwd.encode('utf-8'), host.password.encode('utf-8')))
-        
-        obj = AES.new(pwd, AES.MODE_CBC, iv )
+        print(pwd, len(pwd), iv)
+
+        pwd_bkey32 = "{: <32}".format(pwd).encode('utf-8')
+
+        obj = AES.new(pwd_bkey32, AES.MODE_CBC, iv )
         lendif = len(host.password) % 16
         fillsp = 16 - lendif
         
         ciphertext = obj.encrypt(host.password+(' '*fillsp))  
+        print(host.password, ciphertext)
 
-        obj2 = AES.new(pwd, AES.MODE_CBC, iv )
-        deciphertext = obj2.decrypt(ciphertext)
-        password = deciphertext.decode()
+        ciphertext_hex = ciphertext.hex()
+        byte_ciphertext = bytes.fromhex(ciphertext_hex)
+
+        obj2 = AES.new(pwd_bkey32, AES.MODE_CBC, iv )
+        deciphertext = obj2.decrypt(byte_ciphertext)
+        password = deciphertext.decode('utf-8')
+
+        print(host.password+(' '*fillsp), pwd_bkey32, ciphertext_hex, deciphertext, password)
 
         cp.set(section, "pass", ciphertext.hex() )
 
@@ -2979,7 +3032,7 @@ class NotebookTabLabel(Gtk.HBox):
         self.eb2.modify_bg(Gtk.STATE_NORMAL, bg[Gtk.STATE_NORMAL])
         
     def on_close_tab(self, widget, notebook, *args):
-        if conf.CONFIRM_ON_CLOSE_TAB and msgconfirm("%s [%s]?" % ( _("Cerrar consola"), self.label.get_text().strip()) ) != Gtk.RESPONSE_OK:
+        if conf.CONFIRM_ON_CLOSE_TAB and msgconfirm("%s [%s]?" % ( _("Cerrar consola"), self.label.get_text().strip()) ) != Gtk.ResponseType.OK:
             return True
         
         self.close_tab(widget)
@@ -3019,7 +3072,7 @@ class NotebookTabLabel(Gtk.HBox):
             else:
                 self.popup.mnuReopen.show()
             
-            #enable or disable log checkbox according to terminal 
+            # enable or disable log checkbox according to terminal 
             self.popup.mnuLog.set_active( hasattr(self.widget.get_child(), "log_handler_id") and self.widget.get_child().log_handler_id != 0 )
             self.popup.popup( None, None, None, event.button, event.time)
             return True
@@ -3036,29 +3089,32 @@ class EntryDialog( Gtk.Dialog):
             self.set_modal(True)
         box = Gtk.VBox(spacing=10)
         box.set_border_width(10)
-        self.vbox.pack_start(box)
+        #self.vbox.pack_start(box)
+        self.vbox.pack_start(box, expand=False, fill=False, padding=1 )
         box.show()
         if message:
             label = Gtk.Label(message)
-            box.pack_start(label)
+            #box.pack_start(label)
+            box.pack_start(box, expand=False, fill=False, padding=1 )
             label.show()
         self.entry = Gtk.Entry()
         self.entry.set_text(default_text)
         self.entry.set_visibility(not mask)
-        box.pack_start(self.entry)
+        #box.pack_start(self.entry)
+        box.pack_start(self.entry, expand=False, fill=False, padding=1 )
         self.entry.show()
         self.entry.grab_focus()
         button = Gtk.Button(stock=Gtk.STOCK_OK)
         button.connect("clicked", self.click)
         self.entry.connect("activate", self.click)
-        button.set_flags(Gtk.CAN_DEFAULT)
-        self.action_area.pack_start(button)
+        button.set_can_default(True)
+        self.action_area.pack_start(button, expand=False, fill=False, padding=1 )
         button.show()
         button.grab_default()
         button = Gtk.Button(stock=Gtk.STOCK_CANCEL)
         button.connect("clicked", self.quit)
-        button.set_flags(Gtk.CAN_DEFAULT)
-        self.action_area.pack_start(button)
+        button.set_can_default(True)
+        self.action_area.pack_start(button, expand=False, fill=False, padding=1 )
         button.show()
         self.ret = None
 
@@ -3068,7 +3124,7 @@ class EntryDialog( Gtk.Dialog):
 
     def click(self, button):
         self.value = self.entry.get_text()        
-        self.response(Gtk.RESPONSE_OK)
+        self.response(Gtk.ResponseType.OK)
 
 
 

@@ -1,4 +1,6 @@
-# gnome-connection-manager
+# Gnome Connection Manager
+
+Gnome Connection Manager was adapted from Python 2 to Python 3 to make posible it works on modern Python 3 based Linux Distributions like Debian 10, Linux MX 19, Manjaro, Arch Linux, etc. 
 
 ![GCM screenshot](screenshot.png)
 
@@ -74,4 +76,4 @@ Replace USERNAME in examples above with your username.
 
 # Note about the author
 The original author of GCM is Renzo Bertuzzi (kuthulu@gmail.com), this works is a fork from GCM implementation by matko.jun@gmail.com
-This work is the port of GMC from Python 2 to Python 3 and PyGObjects (GTK+3, GDK 2.6, Vte 2.91) by Luis Armando Medina Avitia (lamedina@gmail.com)
+and ported from Python 2 (pyGtk, python-vte) to Python 3 and PyGObjects (GTK+3, GDK 2.6, Vte 2.91) by Luis Armando Medina Avitia (lamedina@gmail.com)

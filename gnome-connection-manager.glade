@@ -3,16 +3,6 @@
 <!--*- mode: xml -*-->
 <interface>
   <requires lib="gtk+" version="3.10"/>
-  <object class="GtkImage">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-save-as</property>
-  </object>
-  <object class="GtkImage">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-sort-descending</property>
-  </object>
   <object class="GtkAdjustment" id="adjustment1">
     <property name="lower">1</property>
     <property name="upper">65535</property>
@@ -52,6 +42,21 @@
     <property name="stock">gtk-about</property>
     <property name="icon_size">1</property>
   </object>
+  <object class="GtkImage" id="gtk-missing-image">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-sort-descending</property>
+  </object>
+  <object class="GtkImage" id="gtk-save-as">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-save-as</property>
+  </object>
+  <object class="GtkImage" id="gtk-sort-ascending">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-sort-ascending</property>
+  </object>
   <object class="GtkImage" id="imgCopyAll">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -89,36 +94,42 @@
                 <property name="label" translatable="yes">_Archivo</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem1_menu">
+                  <object class="GtkMenu" id="menuitem1_menu1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="guardar_como1">
-                        <property name="label">gtk-save-as</property>
+                        <property name="label" translatable="yes">Guardar buffer _como</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">gtk-save-as</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_guardar_como1_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="importar_servidores1">
-                        <property name="label">gtk-sort-descending</property>
+                        <property name="label" translatable="yes">_Importar servidores</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="tooltip_text" translatable="yes">Importar lista de servidores desde un archivo</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">gtk-missing-image</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_importar_servidores1_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="exportar_servidores1">
-                        <property name="label">gtk-sort-ascending</property>
+                        <property name="label" translatable="yes">_Exportar servidores</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">gtk-sort-ascending</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_exportar_servidores1_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -149,7 +160,7 @@
                 <property name="label" translatable="yes">_Editar</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem2_menu">
+                  <object class="GtkMenu" id="menuitem2_menu1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
@@ -228,7 +239,7 @@
                 <property name="label" translatable="yes">_Ver</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu" id="menuitem1_menu1">
+                  <object class="GtkMenu" id="menuitem3_menu1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
@@ -294,7 +305,6 @@
                         <property name="label">A_cerca de</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Guardar buffer de la consola activa en un archivo</property>
                         <property name="use_underline">True</property>
                         <property name="image">gtk-about</property>
                         <property name="use_stock">False</property>
@@ -1856,6 +1866,21 @@ blanco: por defecto
                   <placeholder/>
                 </child>
                 <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
                   <object class="GtkTable" id="table3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -2999,6 +3024,36 @@ Renzo Bertuzzi L. (kuthulu@gmail.com) - Chile</property>
                 <property name="border_width">4</property>
                 <property name="n_columns">2</property>
                 <property name="column_spacing">5</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>

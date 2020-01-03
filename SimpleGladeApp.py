@@ -105,7 +105,7 @@ class SimpleGladeApp():
         self.glade = None
 
         self.builder = Gtk.Builder()
-        self.builder.set_translation_domain(domain)     
+        self.builder.set_translation_domain(domain)
         self.builder.add_from_file(self.glade_path)
         self.builder.connect_signals(self)
 

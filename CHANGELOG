@@ -16,6 +16,9 @@
 #        - Rusian lang fix from alternate fork 
 #        - Default Terminal detected
 #        - Change correct shell to executer on terminal widgets
+#        - Translation from glade builder fixed
+#        - Save bufer to file fixed
+#        - Import servers fixed
 #
 # v1.3.0 - Python 3 code and GTK3 quick rewrite, fix bugs and fist run.
 #        - code rewrite to migrate from python2 to python3 ans PyGObject gi
